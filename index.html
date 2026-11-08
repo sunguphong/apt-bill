@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F4F4A" />
+<link rel="icon" href="data:image/svg+xml,<svg viewBox='0 0 44 56'><rect x='0' y='0' width='29' height='56' fill='%230F4F4A'/><rect x='31' y='0' width='13' height='12' fill='%230F4F4A'/><rect x='31' y='14' width='13' height='19' fill='%23B08D4B'/><rect x='31' y='35' width='13' height='21' fill='%23B08D4B'/></svg>" />
+<title>우리집 관리비</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F3F5F9; --card:#FFFFFF; --text:#18202F; --muted:#6B7385; --line:#E5E8EF;
+    --navy:#0F4F4A; --navy-2:#2E6E66; --slate:#8FA6A2; --gold:#B08D4B; --gold-bg:#F6F0E3;
+    --up:#E03E3E; --up-bg:#FDEDED; --down:#2B6BE6; --down-bg:#EAF1FE;
+    --warn:#B26A00; --warn-bg:#FFF5E1; --ok:#1B8A5A;
+    --radius:14px; --shadow:0 1px 2px rgba(20,30,50,.05),0 4px 16px rgba(20,30,50,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+  .num{font-variant-numeric:tabular-nums}
+  a{color:inherit}
+  button,input,select,textarea{font:inherit;color:inherit}
+  header.top{background:var(--navy);color:#fff;padding:12px 16px;border-bottom:3px solid var(--gold)}
+  header.top .brand{display:flex;align-items:center;gap:10px}
+  header.top .logo{width:28px;height:36px;flex:none;background:#fff;padding:3px;border-radius:4px;display:block}
+  header.top .logo-img{height:36px;width:auto;background:#fff;padding:3px;border-radius:4px;flex:none}
+  header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  header.top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-.2px}
+  header.top .sub{font-size:12px;opacity:.75}
+  nav.tabs{display:flex;gap:4px}
+  nav.tabs a{color:#fff;text-decoration:none;padding:8px 12px;border-radius:10px;font-size:14px;opacity:.8}
+  nav.tabs a.active{background:rgba(255,255,255,.14);opacity:1;font-weight:600}
+  .wrap{max-width:1080px;margin:0 auto}
+  main{padding:16px 16px 96px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+  .card h2{font-size:16px;margin:0 0 12px;font-weight:700}
+  .card h2 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .between{justify-content:space-between}
+  .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--navy);color:#fff;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:#EEF1F6;color:var(--navy)}
+  .btn.danger{background:var(--up-bg);color:var(--up)}
+  .btn.sm{padding:6px 10px;font-size:13px}
+  .btn.block{width:100%;justify-content:center;padding:14px}
+  input.f,select.f,textarea.f{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;width:100%}
+  input.f:focus,select.f:focus,textarea.f:focus{outline:2px solid #C9D4EA;border-color:#9FB0D3}
+  label.lbl{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  .up{color:var(--up)} .down{color:var(--down)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.up{background:var(--up-bg)} .pill.down{background:var(--down-bg)}
+  .pill.new{background:#F1ECFE;color:#6B3FD4} .pill.gone{background:#EEF0F4;color:#555E70}
+  .pill.warn{background:var(--warn-bg);color:var(--warn)}
+  .pill.gray{background:#EEF1F6;color:var(--muted)}
+
+  /* hero */
+  .hero{background:linear-gradient(135deg,#0F4F4A,#1F6A61);color:#fff;border-top:3px solid var(--gold)}
+  .hero .label{opacity:.8;font-size:14px}
+  .hero .total{font-size:38px;font-weight:800;letter-spacing:-1px;margin:4px 0}
+  .hero .delta{display:inline-flex;gap:8px;align-items:center;font-size:17px;font-weight:700;padding:6px 12px;border-radius:10px;background:rgba(255,255,255,.12)}
+  .hero .delta.up{color:#FFB4B4} .hero .delta.down{color:#B5CEFF}
+  .hero .summary{margin-top:12px;font-size:15px;opacity:.95}
+  .hero select{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:8px;padding:6px 8px}
+  .hero select option{color:#000}
+  .kpi{padding:14px}
+  .kpi .k{font-size:12px;color:var(--muted)}
+  .kpi .v{font-size:18px;font-weight:700;margin-top:2px}
+  .kpi .d{font-size:12px;margin-top:2px}
+
+  table.t{width:100%;border-collapse:collapse;font-size:14px}
+  table.t th{font-weight:600;color:var(--muted);font-size:12px;text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.t th:first-child,table.t td:first-child{text-align:left}
+  table.t td{padding:9px 6px;border-bottom:1px solid #F0F2F6;text-align:right;white-space:nowrap}
+  table.t tr.sumrow td{font-weight:700;border-top:2px solid var(--line)}
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  .anom{border-left:4px solid var(--warn);background:#FFFBF2;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .anom.up{border-color:var(--up);background:#FFF7F7}
+  .anom.down{border-color:var(--down);background:#F6F9FF}
+  .anom .h{font-weight:700}
+  .anom .why{font-size:13px;color:#4A5366;margin-top:3px}
+
+  .bar{height:8px;border-radius:99px;background:#EEF1F6;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--gold)}
+  .tip{padding:10px 0;border-bottom:1px solid #F0F2F6}
+  .tip:last-child{border-bottom:0}
+  .tip b{display:block;margin-bottom:2px}
+  .tip ul{margin:4px 0 0;padding-left:18px;color:#3E4659;font-size:14px}
+
+  .drop{border:2px dashed #C6CEDD;border-radius:var(--radius);padding:22px;text-align:center;background:#FAFBFD}
+  .thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .thumb{position:relative;width:96px;height:128px;border-radius:10px;overflow:hidden;background:#eee;border:1px solid var(--line)}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb button{position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:24px;height:24px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer}
+  .spinner{width:34px;height:34px;border:4px solid #DDE3EE;border-top-color:var(--navy);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .ed td{padding:4px 3px}
+  .ed input{border:1px solid transparent;border-radius:8px;padding:7px 8px;width:100%;background:#F7F8FB}
+  .ed input:focus{border-color:#9FB0D3;background:#fff;outline:0}
+  .ed input.amt{text-align:right;min-width:96px}
+  .ed input.usage{text-align:right;width:84px}
+  .ed input.unit{width:56px}
+  .ed input.name{min-width:130px}
+  .ed .x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px 8px}
+
+  .rec{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #F0F2F6;text-decoration:none}
+  .rec:last-child{border-bottom:0}
+  .rec .ph{width:48px;height:64px;border-radius:8px;background:#EEF1F6;flex:none;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+  .rec .ph img{width:100%;height:100%;object-fit:cover}
+  .rec .m{flex:1;min-width:0}
+  .rec .m b{display:block}
+  .rec .amt{text-align:right}
+  .origimgs img{max-width:100%;border-radius:10px;border:1px solid var(--line);margin-bottom:8px;display:block}
+  .chartbox{position:relative;height:260px}
+  .chartbox.sm{height:200px}
+  .chartbox.xs{height:120px;margin-top:6px}
+  .itemgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .icard{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+  .icard .iname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .icard .iv{font-size:17px;font-weight:700;margin-top:4px}
+  @media (max-width:900px){ .itemgrid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:560px){ .itemgrid{grid-template-columns:1fr} }
+  .empty{text-align:center;padding:40px 16px}
+  .empty .big{font-size:40px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0F4F4A;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;box-shadow:var(--shadow);max-width:90vw}
+  .notice{background:var(--warn-bg);color:#6B4A00;border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0}
+  .notice.ok{background:#E8F6EF;color:#14563A}
+  .notice.err{background:var(--up-bg);color:#8A1F1F}
+
+  @media (max-width:760px){
+    nav.tabs.desk{display:none}
+    nav.bottom{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+    nav.bottom a{flex:1;text-align:center;padding:9px 0 8px;font-size:11px;color:var(--muted);text-decoration:none}
+    nav.bottom a .ic{display:block;font-size:19px;line-height:1.2}
+    nav.bottom a.active{color:var(--navy);font-weight:700}
+    .g2,.g3{grid-template-columns:1fr}
+    .g3.kpis{grid-template-columns:repeat(3,1fr);gap:8px}
+    .kpi{padding:10px}
+    .kpi .v{font-size:15px}
+    .hero .total{font-size:32px}
+    main{padding:12px 12px 96px}
+    .card{padding:14px}
+    .hide-m{display:none}
+  }
+  @media (min-width:761px){ nav.bottom{display:none} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <!-- 실제 CI 파일을 index.html 옆에 logo.png로 두면 그 이미지를 쓰고, 없으면 아래 SVG 마크를 씁니다 -->
+      <img class="logo-img" src="logo.png" alt="" onerror="this.remove();document.getElementById('logoSvg').style.display=''">
+      <span id="logoSvg" style="display:none"><svg class="logo" viewBox="0 0 44 56" aria-hidden="true"><rect x="0" y="0" width="29" height="56" fill="#0F4F4A"/><rect x="31" y="0" width="13" height="12" fill="#0F4F4A"/><rect x="31" y="14" width="13" height="19" fill="#B08D4B"/><rect x="31" y="35" width="13" height="21" fill="#B08D4B"/></svg></span>
+      <div>
+        <h1>우리집 관리비</h1>
+        <div class="sub" id="aptSub">동탄역 포레너스 · 84㎡</div>
+      </div>
+    </div>
+    <nav class="tabs desk" id="deskNav"></nav>
+  </div>
+</header>
+<main class="wrap" id="view"></main>
+<nav class="bottom" id="mobNav"></nav>
+<datalist id="itemNames"></datalist>
+
+<script type="module">
+/* =====================================================================
+ * 우리집 관리비 — 단일 HTML 버전
+ * 구조:  [설정/상수] → [유틸] → [저장소(Repository)] → [AI 분석] →
+ *        [분석 로직] → [화면(View)] → [라우터]
+ * 서버로 옮길 때는 createLocalRepo()와 같은 메서드를 가진 createApiRepo()를
+ * 만들어 `repo`만 바꿔 끼우면 된다. 화면 코드는 repo 메서드만 사용한다.
+ * ===================================================================== */
+
+/* ---------- 1. 설정 / 상수 ---------- */
+const SDK_URL = 'https://esm.sh/@anthropic-ai/sdk@1.3.0';
+const DEFAULT_HOUSEHOLD = { aptName:'동탄역 포레너스', pyeong:33, area:84, members:4, heating:'중앙난방', billFormat:'아파트 앱 캡처 화면' };
+const MODELS = [
+  { id:'claude-opus-5-5',   label:'Claude Opus 5.5 (권장·가장 정확)' },
+  { id:'claude-sonnet-5-5', label:'Claude Sonnet 5.5 (빠르고 저렴)' },
+  { id:'claude-haiku-5-5',  label:'Claude Haiku 5.5 (가장 저렴)' },
+];
+// 표준 항목명: 달마다 고지서 표기가 조금 달라도 같은 이름으로 모아 비교하기 위함
+const STANDARD_ITEMS = [
+  '일반관리비','청소비','경비비','소독비','승강기유지비','지능형홈네트워크설비유지비','수선유지비',
+  '장기수선충당금','위탁관리수수료','화재보험료','입주자대표회의운영비','선거관리위원회운영비',
+  '공동전기료','승강기전기료','공동수도료','세대전기료','세대수도료','난방비','급탕비','가스료',
+  'TV수신료','생활폐기물수수료','음식물처리비','커뮤니티시설이용료','주차비','잡수입공제'
+];
+
+/* ---------- 2. 유틸 ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const num = n => Math.round(n).toLocaleString('ko-KR');
+const won = n => (n == null || isNaN(n)) ? '-' : num(n) + '원';
+const signedWon = n => (n > 0 ? '+' : n < 0 ? '−' : '') + num(Math.abs(n)) + '원';
+const pctStr = p => (p == null || !isFinite(p)) ? '-' : (p > 0 ? '+' : p < 0 ? '−' : '') + Math.abs(p).toFixed(1) + '%';
+const arrow = d => d > 0 ? '▲' : d < 0 ? '▼' : '─';
+const dirCls = d => d > 0 ? 'up' : d < 0 ? 'down' : '';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const ymAdd = (ym, d) => { let [y, m] = ym.split('-').map(Number); m += d; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return `${y}-${String(m).padStart(2,'0')}`; };
+const ymLabel = ym => { const [y, m] = ym.split('-'); return `${y}년 ${+m}월`; };
+const ymShort = ym => { const [y, m] = ym.split('-'); return `${y.slice(2)}.${m}`; };
+const monthOf = ym => +ym.split('-')[1];
+const isYm = s => /^\d{4}-(0[1-9]|1[0-2])$/.test(s || '');
+const sumItems = items => items.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+const manWon = n => { const a = Math.abs(n); return a >= 10000 ? `${(a / 10000).toFixed(1).replace(/\.0$/, '')}만 원` : `${num(a)}원`; };
+const parseAmount = s => { const t = String(s ?? '').replace(/[^\d\-]/g, ''); if (!t || t === '-') return 0; return parseInt(t, 10) || 0; };
+const parseNum = s => { if (s === '' || s == null) return null; const v = parseFloat(String(s).replace(/,/g, '')); return isNaN(v) ? null : v; };
+const nowYm = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}`; };
+function toast(msg, ms = 2600) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), ms); }
+
+/* ---------- 3. 저장소 (IndexedDB) ----------
+ * 데이터 구조
+ *  bills  : { id:'2026-10', yearMonth:'2026-10', items:[{name, rawLabel, amount, usage, unit}],
+ *             total, billedTotal, memo, source:'ai'|'manual'|'sample', imageCount,
+ *             createdAt, updatedAt, schemaVersion:1 }
+ *  images : { billId:'2026-10', images:['data:image/jpeg;base64,...', ...] }
+ *  kv     : 'settings' → { apiKey, proxyUrl, model, household:{...} }
+ */
+function createLocalRepo() {
+  let dbp;
+  const open = () => dbp ??= new Promise((res, rej) => {
+    const r = indexedDB.open('apt-bill-db', 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      db.createObjectStore('bills', { keyPath: 'id' });
+      db.createObjectStore('images', { keyPath: 'billId' });
+      db.createObjectStore('kv');
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const tx = async (store, mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode);
+      const req = fn(t.objectStore(store));
+      t.oncomplete = () => res(req?.result);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    });
+  };
+  return {
+    async listBills() { return ((await tx('bills', 'readonly', s => s.getAll())) || []).sort((a, b) => a.yearMonth.localeCompare(b.yearMonth)); },
+    getBill: id => tx('bills', 'readonly', s => s.get(id)),
+    putBill: bill => tx('bills', 'readwrite', s => s.put(bill)),
+    async deleteBill(id) { await tx('bills', 'readwrite', s => s.delete(id)); await tx('images', 'readwrite', s => s.delete(id)); },
+    async getImages(id) { return (await tx('images', 'readonly', s => s.get(id)))?.images ?? []; },
+    putImages: (id, images) => tx('images', 'readwrite', s => s.put({ billId: id, images })),
+    async getSettings() { return { model: MODELS[0].id, apiKey: '', proxyUrl: '', household: { ...DEFAULT_HOUSEHOLD }, ...(await tx('kv', 'readonly', s => s.get('settings')) || {}) }; },
+    saveSettings: v => tx('kv', 'readwrite', s => s.put(v, 'settings')),
+    async clearAll() { await tx('bills', 'readwrite', s => s.clear()); await tx('images', 'readwrite', s => s.clear()); },
+  };
+}
+/* 나중에 서버로 옮길 때 예시 (같은 인터페이스):
+function createApiRepo(base) {
+  const j = (p, o) => fetch(base + p, { headers:{'Content-Type':'application/json'}, ...o }).then(r => r.json());
+  return {
+    listBills: () => j('/bills'), getBill: id => j('/bills/' + id),
+    putBill: b => j('/bills/' + b.id, { method:'PUT', body: JSON.stringify(b) }),
+    deleteBill: id => j('/bills/' + id, { method:'DELETE' }),
+    getImages: id => j('/bills/' + id + '/images'), putImages: (id, imgs) => j('/bills/' + id + '/images', { method:'PUT', body: JSON.stringify(imgs) }),
+    getSettings: () => j('/settings'), saveSettings: v => j('/settings', { method:'PUT', body: JSON.stringify(v) }),
+  };
+}*/
+const repo = createLocalRepo();
+
+const state = { bills: [], settings: null, dashYm: null, trendItem: null, statYear: null, draft: null, pendingImages: [] };
+async function reload() { state.bills = await repo.listBills(); }
+const billByYm = ym => state.bills.find(b => b.yearMonth === ym);
+const latestBill = () => state.bills[state.bills.length - 1];
+
+/* ---------- 4. 항목 분류 · 원인 설명 · 절약 팁 ---------- */
+function kindOf(name) {
+  const n = name.replace(/\s/g, '');
+  if (/공동|공용|승강기전기|가로등/.test(n) && /전기|수도/.test(n)) return 'common-util';
+  if (/급탕|온수/.test(n)) return 'hotwater';
+  if (/난방/.test(n)) return 'heat';
+  if (/전기/.test(n)) return 'elec';
+  if (/수도|상수|하수/.test(n)) return 'water';
+  if (/가스/.test(n)) return 'gas';
+  if (/장기수선/.test(n)) return 'ltr';
+  if (/수선유지/.test(n)) return 'repair';
+  if (/승강기/.test(n)) return 'elevator';
+  if (/일반관리|경비|청소|소독|위탁/.test(n)) return 'labor';
+  if (/보험/.test(n)) return 'insurance';
+  if (/공제|할인|차감|잡수입/.test(n)) return 'credit';
+  if (/TV|수신료/i.test(n)) return 'tv';
+  return 'etc';
+}
+const USAGE_KINDS = ['elec', 'water', 'heat', 'hotwater', 'gas'];
+const KIND_LABEL = { elec:'전기', water:'수도', heat:'난방', hotwater:'급탕(온수)', gas:'가스' };
+const isWinter = m => [11, 12, 1, 2].includes(m);
+const isHeatStart = m => [10, 11, 12].includes(m);
+const isHeatEnd = m => [3, 4, 5].includes(m);
+const isSummer = m => [7, 8].includes(m);
+
+function explain(row, type, ym) {
+  const k = kindOf(row.name), m = monthOf(ym), up = row.diff > 0;
+  if (type === 'new') {
+    if (k === 'heat' && (isHeatStart(m) || isWinter(m))) return '난방 가동이 시작되면서 부과되기 시작했을 가능성이 높아요.';
+    if (k === 'credit') return '잡수입·에너지 절약 등으로 이번 달 공제가 생겼을 수 있어요.';
+    return '일시 부과 항목(선거관리비, 특별수선, 정산금 등)이거나 고지서 항목명이 바뀌었을 수 있어요. 이름이 바뀐 경우 기록에서 항목명을 맞춰 주세요.';
+  }
+  if (type === 'removed') {
+    if (k === 'heat' && (isHeatEnd(m) || isSummer(m) || m === 6)) return '난방 기간이 끝나 부과되지 않았을 가능성이 높아요.';
+    return '일시 부과가 끝났거나 다른 항목에 합쳐졌을 수 있어요. AI가 놓친 경우라면 기록을 수정해 주세요.';
+  }
+  if (type === 'unit') {
+    return ({
+      elec: '사용량은 비슷한데 요금이 올랐어요. 누진 구간 경계를 넘었거나, 전기요금(연료비조정단가 등) 인상이 반영됐을 수 있어요.',
+      water: '사용량은 비슷한데 요금이 올랐어요. 지자체 상·하수도 요금 인상(주로 1월)이 반영됐을 수 있어요.',
+      heat: '사용량 대비 요금이 올랐어요. 열요금·연료비 단가 조정이나 기본요금 변경 가능성이 있어요.',
+      hotwater: '사용량 대비 요금이 올랐어요. 급탕 단가(연료비) 조정 또는 공용 손실분 배분 방식 변경 가능성이 있어요.',
+      gas: '사용량은 비슷한데 요금이 올랐어요. 도시가스 요금 인상(정부 고시)이 반영됐을 수 있어요.',
+    })[k] || '사용량 대비 단가가 올랐어요. 요금 인상 여부를 관리사무소 공지에서 확인해 보세요.';
+  }
+  // type === 'swing'
+  const R = {
+    heat: up ? (isHeatStart(m) || isWinter(m) ? '기온이 내려가며 난방 사용이 늘어나는 계절 영향이에요.' : '난방 사용량이 늘었거나 단가가 올랐을 수 있어요.')
+             : (isHeatEnd(m) ? '기온이 오르며 난방 사용이 줄어든 계절 영향이에요.' : '난방 사용이 줄었어요.'),
+    hotwater: up ? (isWinter(m) || isHeatStart(m) ? '수온이 낮아져 같은 양의 온수에도 에너지가 더 들고, 온수 사용도 늘어나는 시기예요.' : '샤워·설거지 등 온수 사용량이 늘었을 수 있어요.')
+                 : '날씨가 따뜻해지며 온수 사용·가열 에너지가 줄었을 수 있어요.',
+    elec: up ? (isSummer(m) ? '에어컨 등 냉방 사용이 늘어 누진 구간이 올라갔을 수 있어요.' : isWinter(m) ? '전기장판·온풍기 등 난방 가전 사용 증가 가능성이 있어요.' : '가전 사용 증가 또는 검침 기간(일수)이 길었을 수 있어요.')
+             : (m === 9 || m === 10 ? '냉방 사용이 끝나며 줄었어요.' : '가전 사용이 줄었거나 검침 일수가 짧았을 수 있어요.'),
+    water: up ? (isSummer(m) || m === 6 ? '여름철 샤워·세탁 횟수 증가 영향일 수 있어요.' : '사용량 증가 또는 검침 일수 차이일 수 있어요. 급증했다면 누수도 확인해 보세요.') : '사용량이 줄었거나 검침 일수가 짧았을 수 있어요.',
+    gas: up ? (isWinter(m) ? '겨울철 취사·보조난방 가스 사용 증가 영향일 수 있어요.' : '가스 사용량 증가 또는 요금 인상 가능성이 있어요.') : '가스 사용량이 줄었어요.',
+    'common-util': up ? (isSummer(m) ? '여름철 공용부 냉방·환기(지하주차장 등) 전력 증가 영향일 수 있어요.' : '공용부 전력·수도 사용 증가 또는 단가 인상 가능성이 있어요.') : '공용부 사용량이 줄었어요.',
+    labor: up ? (m === 1 || m === 2 ? '연초 최저임금·인건비 인상이 반영되는 시기예요.' : '퇴직충당금·연차수당 정산, 인력 변경 등이 반영됐을 수 있어요.') : '지난달 일시 정산분이 빠졌을 수 있어요.',
+    ltr: up ? '장기수선계획에 따른 적립 요율 조정 가능성이 있어요. 관리사무소 공지를 확인해 보세요.' : '적립 요율이 조정됐을 수 있어요.',
+    repair: up ? '공용시설 보수·교체 공사 비용이 이번 달에 반영됐을 수 있어요.' : '지난달 공사 비용이 빠지며 정상 수준으로 돌아왔을 수 있어요.',
+    elevator: up ? '승강기 정기검사·부품 교체 비용이 반영됐을 수 있어요.' : '지난달 일시 비용이 빠졌을 수 있어요.',
+    insurance: '보험 갱신 시점에 보험료가 재산정됐을 수 있어요.',
+    credit: '공제(차감) 금액이 바뀌었어요. 잡수입 배분은 달마다 달라질 수 있어요.',
+  };
+  return R[k] || (up ? '일시 비용 반영 또는 단가 인상 가능성이 있어요.' : '지난달 일시 비용이 빠졌을 수 있어요.');
+}
+
+const TIPS = {
+  heat: { title:'난방비', items:[
+    '실내 온도는 20℃ 안팎으로 유지하고, 1℃만 낮춰도 난방 에너지가 약 7% 줄어요.',
+    '짧은 외출엔 끄지 말고 외출모드(2~3℃ 낮춤)로 두세요. 껐다 켜면 다시 데우는 에너지가 더 들어요.',
+    '안 쓰는 방은 분배기(각방) 밸브를 잠그고 문을 닫아두세요.',
+    '창문 뽁뽁이·문풍지, 두꺼운 커튼으로 열 손실을 막고 가습기로 체감온도를 올리세요.',
+    '난방이 잘 안 돌면 분배기 공기빼기를 해 보세요(관리사무소 문의).'] },
+  hotwater: { title:'급탕비(온수)', items:[
+    '샤워 시간을 4인 모두 하루 1~2분씩만 줄여도 월 온수 사용량이 눈에 띄게 줄어요.',
+    '절수형 샤워헤드로 바꾸면 물·온수를 함께 아낄 수 있어요.',
+    '설거지·세수는 가능하면 미지근한 물 대신 냉수로, 수전 레버를 냉수 쪽에 두세요.'] },
+  elec: { title:'세대 전기료', items:[
+    '주택용 전기는 누진제예요. 사용량이 구간 경계(기타월 200/400kWh, 7~8월 300/450kWh) 근처라면 조금만 줄여도 효과가 커요.',
+    '셋톱박스·PC·전기밥솥 보온 등 대기전력은 스위치형 멀티탭으로 끄세요.',
+    '에어컨은 26℃ + 선풍기, 필터는 2주마다 청소하세요.',
+    '냉장고는 60% 정도만 채우고, 김치냉장고 설정 온도를 점검해 보세요.'] },
+  water: { title:'세대 수도료', items:[
+    '모든 수도를 잠근 뒤 계량기가 돌면 누수예요. 변기 물탱크 누수가 흔해요.',
+    '세탁은 모아서, 양치·설거지 시 물 받아 쓰기.',
+    '변기 수조에 절수 부품을 넣으면 1회 물 사용량이 줄어요.'] },
+  gas: { title:'가스료', items:[
+    '냄비 뚜껑을 덮고 중불로 조리하면 가스가 덜 들어요.',
+    '압력솥·전자레인지를 함께 활용하세요.',
+    '가스레인지 버너 화구가 막히지 않았는지 청소해 보세요.'] },
+};
+
+/* ---------- 5. 분석 로직 ---------- */
+function aggregate(items) {
+  const m = new Map();
+  for (const it of items || []) {
+    const name = (it.name || '').trim() || '(이름없음)';
+    const e = m.get(name) || { name, amount: 0, usage: null, unit: it.unit || '' };
+    e.amount += Number(it.amount) || 0;
+    if (it.usage != null && it.usage !== '') e.usage = (e.usage || 0) + Number(it.usage);
+    if (!e.unit && it.unit) e.unit = it.unit;
+    m.set(name, e);
+  }
+  return m;
+}
+
+function compare(cur, prev) {
+  const a = aggregate(cur?.items), b = aggregate(prev?.items);
+  const names = new Set([...a.keys(), ...b.keys()]);
+  const rows = [...names].map(name => {
+    const c = a.get(name), p = b.get(name);
+    const curAmt = c ? c.amount : null, prevAmt = p ? p.amount : null;
+    const diff = (curAmt || 0) - (prevAmt || 0);
+    const pct = prevAmt ? diff / Math.abs(prevAmt) * 100 : null;
+    const curUsage = c?.usage ?? null, prevUsage = p?.usage ?? null;
+    const usagePct = (curUsage != null && prevUsage) ? (curUsage - prevUsage) / prevUsage * 100 : null;
+    let unitPct = null;
+    if (curUsage > 0 && prevUsage > 0 && curAmt > 0 && prevAmt > 0) unitPct = ((curAmt / curUsage) / (prevAmt / prevUsage) - 1) * 100;
+    let status = '';
+    if (prev) { if (!c || curAmt === 0 && prevAmt) status = 'removed'; else if (!p || (!prevAmt && curAmt)) status = 'new'; }
+    return { name, cur: curAmt, prev: prevAmt, diff, pct, curUsage, prevUsage, usagePct, unitPct, unit: c?.unit || p?.unit || '', status };
+  });
+  rows.sort((x, y) => (y.cur ?? -1e12) - (x.cur ?? -1e12));
+  const total = cur ? sumItems(cur.items) : 0, prevTotal = prev ? sumItems(prev.items) : null;
+  const totalDiff = prev ? total - prevTotal : null;
+  const totalPct = prev && prevTotal ? totalDiff / prevTotal * 100 : null;
+  return { rows, total, prevTotal, totalDiff, totalPct };
+}
+
+function detectAnomalies(cmp, ym) {
+  if (cmp.prevTotal == null) return [];
+  const out = [];
+  for (const r of cmp.rows) {
+    let type = null;
+    if (r.status === 'new') type = 'new';
+    else if (r.status === 'removed') type = 'removed';
+    else if (r.unitPct != null && r.unitPct >= 10 && Math.abs(r.usagePct) <= 10) type = 'unit';
+    else if (r.pct != null && Math.abs(r.pct) >= 20 && Math.abs(r.diff) >= 500) type = 'swing';
+    if (type) out.push({ type, row: r, why: explain(r, type, ym) });
+  }
+  const order = { unit: 0, swing: 1, new: 2, removed: 3 };
+  return out.sort((x, y) => order[x.type] - order[y.type] || Math.abs(y.row.diff) - Math.abs(x.row.diff));
+}
+
+function summaryLine(cmp, ym) {
+  const L = ymLabel(ym);
+  if (cmp.prevTotal == null) return `${L} 관리비는 ${won(cmp.total)}이에요. 지난달 기록이 쌓이면 비교 분석을 보여드릴게요.`;
+  const d = cmp.totalDiff;
+  if (Math.abs(d) < 1000) return `지난달과 거의 같은 수준이에요 (${signedWon(d)}).`;
+  const same = cmp.rows.filter(r => Math.sign(r.diff) === Math.sign(d)).sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+  const top = same[0];
+  const dir = d > 0 ? '증가' : '감소';
+  if (!top) return `지난달보다 ${manWon(d)} ${dir}했어요.`;
+  const share = Math.abs(top.diff) / Math.abs(d);
+  const lead = share >= 0.5 ? `${top.name} 영향으로` : `${top.name} 등 여러 항목 영향으로`;
+  return `${lead} 지난달보다 ${manWon(d)} ${dir}했어요.`;
+}
+
+function top3(bill) {
+  const rows = [...aggregate(bill.items).values()].filter(r => r.amount > 0).sort((a, b) => b.amount - a.amount);
+  const pos = rows.reduce((s, r) => s + r.amount, 0) || 1;
+  return rows.slice(0, 3).map(r => ({ ...r, share: r.amount / pos * 100 }));
+}
+
+function lastN(n, endYm) {
+  const end = endYm || latestBill()?.yearMonth || nowYm();
+  return Array.from({ length: n }, (_, i) => ymAdd(end, i - n + 1));
+}
+
+function itemSeries(name, months) {
+  return months.map(ym => { const b = billByYm(ym); if (!b) return { amt: null, usage: null }; const e = aggregate(b.items).get(name); return { amt: e ? e.amount : 0, usage: e?.usage ?? null, unit: e?.unit }; });
+}
+
+function tipsFor(bill, cmp) {
+  const m = monthOf(bill.yearMonth);
+  const agg = [...aggregate(bill.items).values()];
+  const byKind = {};
+  for (const r of agg) { const k = kindOf(r.name); if (USAGE_KINDS.includes(k)) { byKind[k] ??= { amount: 0, usage: null, unit: r.unit, names: [] }; byKind[k].amount += r.amount; if (r.usage != null) byKind[k].usage = (byKind[k].usage || 0) + r.usage; byKind[k].names.push(r.name); } }
+  const kinds = Object.entries(byKind).filter(([, v]) => v.amount > 0).sort((a, b) => b[1].amount - a[1].amount);
+  return kinds.slice(0, 3).map(([k, v]) => {
+    const t = TIPS[k]; const notes = [];
+    const rowDiff = cmp.rows.filter(r => kindOf(r.name) === k).reduce((s, r) => s + r.diff, 0);
+    if (cmp.prevTotal != null && rowDiff) notes.push(`지난달보다 ${rowDiff > 0 ? '+' : '−'}${num(Math.abs(rowDiff))}원`);
+    if (k === 'elec' && v.usage) {
+      const [t1, t2] = isSummer(m) ? [300, 450] : [200, 400];
+      const tier = v.usage <= t1 ? 1 : v.usage <= t2 ? 2 : 3;
+      const next = tier === 1 ? t1 : tier === 2 ? t2 : null;
+      notes.push(`이번 달 ${num(v.usage)}kWh → 주택용 누진 ${tier}구간${next ? ` (${next}kWh 초과 시 다음 구간)` : ' (최고 구간)'}`);
+    }
+    // 내 평균 대비
+    const hist = state.bills.filter(b => b.yearMonth < bill.yearMonth).slice(-12).map(b => sumItems(b.items.filter(i => kindOf(i.name) === k))).filter(x => x > 0);
+    if (hist.length >= 3) { const avg = hist.reduce((s, x) => s + x, 0) / hist.length; const p = (v.amount - avg) / avg * 100; notes.push(`최근 평균 대비 ${pctStr(p)}`); }
+    let items = t.items;
+    if (k === 'heat' && !(isWinter(m) || isHeatStart(m) || isHeatEnd(m))) items = items.slice(0, 2);
+    return { kind: k, title: t.title, amount: v.amount, notes, items: items.slice(0, 3) };
+  });
+}
+
+/* ---------- 6. 이미지 처리 ---------- */
+function loadImage(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function fileToJpeg(file, maxW = 1200) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const scale = Math.min(1, maxW / img.width);
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.88);
+  } finally { URL.revokeObjectURL(url); }
+}
+// 긴 앱 캡처는 그대로 보내면 서버에서 축소되어 글씨가 뭉개지므로 세로로 잘라 보낸다.
+async function tilesFor(dataUrl, tileH = 1500, overlap = 80) {
+  const img = await loadImage(dataUrl);
+  if (img.height <= tileH + 200) return [dataUrl.split(',')[1]];
+  const out = [];
+  for (let y = 0; y < img.height; y += tileH - overlap) {
+    const h = Math.min(tileH, img.height - y);
+    const c = document.createElement('canvas'); c.width = img.width; c.height = h;
+    c.getContext('2d').drawImage(img, 0, y, img.width, h, 0, 0, img.width, h);
+    out.push(c.toDataURL('image/jpeg', 0.9).split(',')[1]);
+    if (y + h >= img.height) break;
+  }
+  return out;
+}
+
+/* ---------- 7. AI 고지서 분석 (Claude API) ---------- */
+const BILL_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['year_month', 'year_month_evidence', 'billed_total', 'items', 'notes'],
+  properties: {
+    year_month: { type: 'string', description: '관리비 부과 대상 월, YYYY-MM' },
+    year_month_evidence: { type: 'string', description: '연월 판단 근거가 된 고지서 문구' },
+    billed_total: { anyOf: [{ type: 'integer' }, { type: 'null' }], description: '고지서에 표기된 당월 부과 합계(원). 미납·연체 제외' },
+    items: {
+      type: 'array',
+      items: {
+        type: 'object', additionalProperties: false,
+        required: ['name', 'raw_label', 'amount', 'usage', 'unit'],
+        properties: {
+          name: { type: 'string', description: '표준 항목명 (목록에 없으면 고지서 표기 그대로)' },
+          raw_label: { type: 'string', description: '고지서 원래 표기' },
+          amount: { type: 'integer', description: '당월 금액(원). 공제·할인은 음수' },
+          usage: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '당월 사용량' },
+          unit: { anyOf: [{ type: 'string' }, { type: 'null' }], description: 'kWh, ㎥, Gcal, MWh 등' },
+        },
+      },
+    },
+    notes: { type: 'string', description: '읽기 어려웠던 부분 등 사용자에게 알릴 점. 없으면 빈 문자열' },
+  },
+};
+
+function systemPrompt(h) {
+  return `당신은 한국 아파트 관리비 고지서를 정확하게 읽어 구조화하는 전문가입니다.
+세대 정보: ${h.aptName}, ${h.pyeong}평(전용 ${h.area}㎡), ${h.members}인 가족, ${h.heating}. 고지서 형태: ${h.billFormat}.
+
+규칙:
+- items에는 '당월' 부과 금액만 넣으세요. 전월 금액·증감 열, 소계(공용관리비 계, 개별사용료 계), 총합계, 미납액, 연체료는 넣지 마세요.
+- 같은 항목이 겹쳐 보이는 부분 이미지(연속 캡처, 겹침 영역 있음)가 여러 장일 수 있습니다. 중복 계산하지 마세요.
+- name은 아래 표준 항목명 중 의미가 같은 것을 고르고, 없으면 고지서 표기를 그대로 쓰세요.
+  표준 항목명: ${STANDARD_ITEMS.join(', ')}
+  (예: '전기료'·'세대전기' → 세대전기료, '수도료'·'세대수도' → 세대수도료, '공동전기'·'공용전기' → 공동전기료, '난방비(기본)'+'난방비(사용)'은 각각 따로 두되 이름은 '난방비(기본)', '난방비')
+- 할인·공제(잡수입 차감, 에너지 절약 할인 등)는 음수 금액입니다.
+- 전기·수도·난방·급탕·가스의 '당월 사용량'(지침값이 아닌 사용량)이 보이면 해당 금액 항목의 usage/unit에 넣으세요. 없으면 null.
+- year_month: 고지서의 '○년 ○월분' 표기를 우선 사용하세요. 납기일만 보이면 보통 납기월의 전월이 부과 대상 월입니다. 연도가 없으면 오늘(${new Date().toISOString().slice(0, 10)}) 기준 가장 최근 과거로 판단하세요.
+- 금액은 콤마 없는 정수(원)로. 확실하지 않은 숫자가 있으면 notes에 적으세요.`;
+}
+
+async function analyzeBill(images, settings) {
+  if (!settings.apiKey && !settings.proxyUrl) throw new Error('설정에서 Claude API 키(또는 프록시 주소)를 먼저 입력해 주세요.');
+  const { default: Anthropic } = await import(SDK_URL);
+  const client = settings.proxyUrl
+    ? new Anthropic({ baseURL: settings.proxyUrl.replace(/\/$/, ''), apiKey: settings.apiKey || 'via-proxy', dangerouslyAllowBrowser: true }) // 프록시 사용 시 API 키 칸 = 프록시 접속 암호
+    : new Anthropic({ apiKey: settings.apiKey, dangerouslyAllowBrowser: true });
+
+  const content = [];
+  let idx = 1;
+  for (const d of images) for (const b64 of await tilesFor(d)) {
+    content.push({ type: 'text', text: `이미지 ${idx++}` });
+    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } });
+  }
+  content.push({ type: 'text', text: '위 관리비 고지서에서 부과 연월, 항목별 당월 금액과 사용량, 고지서 합계를 추출해 주세요.' });
+
+  const model = settings.model || MODELS[0].id;
+  const params = {
+    model, max_tokens: 16000,
+    system: systemPrompt(settings.household || DEFAULT_HOUSEHOLD),
+    output_config: { effort: 'medium', format: { type: 'json_schema', schema: BILL_SCHEMA } },
+    messages: [{ role: 'user', content }],
+  };
+  // 안전 분류기가 드물게 거절할 때 다른 모델로 자동 재시도 (Opus/Sonnet 5.5 + Claude API에서만 지원)
+  if (model !== 'claude-haiku-5-5') { params.betas = ['server-side-fallback-2026-07-01']; params.fallbacks = 'default'; }
+
+  let res;
+  try {
+    res = await client.beta.messages.stream(params).finalMessage();
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) throw new Error('API 키가 올바르지 않아요. 설정을 확인해 주세요.');
+    if (e instanceof Anthropic.RateLimitError) throw new Error('요청이 너무 많아요. 잠시 후 다시 시도해 주세요.');
+    if (e instanceof Anthropic.APIConnectionError) throw new Error('네트워크 연결에 실패했어요. (프록시 주소/인터넷 확인)');
+    if (e instanceof Anthropic.APIError) throw new Error(`Claude API 오류 (${e.status ?? ''}): ${e.message}`);
+    throw e;
+  }
+  if (res.stop_reason === 'refusal') throw new Error('AI가 이 이미지를 분석하지 못했어요. 다른 캡처로 시도하거나 직접 입력해 주세요.');
+  if (res.stop_reason === 'max_tokens') throw new Error('응답이 너무 길어 잘렸어요. 이미지를 나눠서 다시 시도해 주세요.');
+  const text = res.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  let data;
+  try { data = JSON.parse(text); } catch { throw new Error('AI 응답을 해석하지 못했어요. 다시 시도해 주세요.'); }
+  return data;
+}
+
+/* ---------- 8. 화면 ---------- */
+const view = $('#view');
+const charts = {};
+function chart(id, cfg) { charts[id]?.destroy(); const el = document.getElementById(id); if (!el) return; charts[id] = new Chart(el, cfg); }
+function destroyCharts() { for (const k in charts) { charts[k]?.destroy(); delete charts[k]; } }
+Chart.defaults.font.family = 'Pretendard, -apple-system, "Malgun Gothic", sans-serif';
+Chart.defaults.color = '#6B7385';
+const C = { navy: '#0F4F4A', navy2: '#2E6E66', slate: '#C3D2CF', amber: '#B08D4B', grid: '#EEF1F6', up: '#E03E3E', down: '#2B6BE6' };
+const wonTick = v => Math.abs(v) >= 10000 ? (v / 10000).toLocaleString('ko-KR') + '만' : v.toLocaleString('ko-KR');
+const tooltipWon = { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y == null ? '-' : num(c.parsed.y) + (c.dataset.yAxisID === 'y1' ? '' : '원')}` } };
+
+function emptyState(msg = '아직 등록된 관리비가 없어요.') {
+  return `<div class="card empty"><div class="big">🧾</div><p><b>${msg}</b></p>
+    <p class="muted small">고지서 캡처를 올리면 AI가 항목별 금액을 읽어 드려요.</p>
+    <div class="row" style="justify-content:center"><a class="btn" href="#/upload">고지서 등록하기</a>
+    <a class="btn ghost" href="#/settings">샘플 데이터로 둘러보기</a></div></div>`;
+}
+
+/* --- 8-1. 대시보드 --- */
+function renderDashboard() {
+  if (!state.bills.length) { view.innerHTML = emptyState(); return; }
+  const ym = (state.dashYm && billByYm(state.dashYm)) ? state.dashYm : latestBill().yearMonth;
+  const cur = billByYm(ym), prev = billByYm(ymAdd(ym, -1)), lastYear = billByYm(ymAdd(ym, -12));
+  const cmp = compare(cur, prev);
+  const anomalies = detectAnomalies(cmp, ym);
+  const last12 = state.bills.filter(b => b.yearMonth <= ym).slice(-12);
+  const avg12 = last12.reduce((s, b) => s + sumItems(b.items), 0) / last12.length;
+  const yoyDiff = lastYear ? cmp.total - sumItems(lastYear.items) : null;
+  const t3 = top3(cur), tips = tipsFor(cur, cmp);
+  const cardRows = cmp.rows; // 이번 달 금액 큰 순, 사라진 항목은 맨 뒤
+  const opts = state.bills.slice().reverse().map(b => `<option value="${b.yearMonth}" ${b.yearMonth === ym ? 'selected' : ''}>${ymLabel(b.yearMonth)}</option>`).join('');
+
+  view.innerHTML = `
+  <div class="card hero">
+    <div class="row between"><span class="label">이번 달 관리비</span><select id="ymSel" aria-label="월 선택">${opts}</select></div>
+    <div class="total num">${won(cmp.total)}</div>
+    ${cmp.prevTotal != null
+      ? `<div class="delta ${dirCls(cmp.totalDiff)} num">${arrow(cmp.totalDiff)} ${num(Math.abs(cmp.totalDiff))}원 <span style="opacity:.85">(${pctStr(cmp.totalPct)})</span> <span style="font-weight:400;font-size:13px;opacity:.8">지난달 대비</span></div>`
+      : `<div class="delta">지난달 기록 없음</div>`}
+    <div class="summary">💡 ${esc(summaryLine(cmp, ym))}</div>
+  </div>
+
+  <div class="grid g3 kpis" style="margin-bottom:14px">
+    <div class="card kpi"><div class="k">지난달</div><div class="v num">${prev ? won(cmp.prevTotal) : '-'}</div></div>
+    <div class="card kpi"><div class="k">작년 같은 달</div><div class="v num">${lastYear ? won(sumItems(lastYear.items)) : '-'}</div>
+      ${lastYear ? `<div class="d ${dirCls(yoyDiff)} num">${arrow(yoyDiff)} ${num(Math.abs(yoyDiff))}원</div>` : `<div class="d muted">데이터 쌓이면 표시</div>`}</div>
+    <div class="card kpi"><div class="k">최근 ${last12.length}개월 평균</div><div class="v num">${won(avg12)}</div>
+      <div class="d ${dirCls(cmp.total - avg12)} num">평균 대비 ${pctStr((cmp.total - avg12) / avg12 * 100)}</div></div>
+  </div>
+
+  ${prev ? `<div class="card"><h2>특이사항 <small>전월 대비 20%↑ 변동 · 신규/소멸 항목 · 단가 인상 의심</small></h2>
+    ${anomalies.length ? anomalies.map(anomHtml).join('') : `<div class="notice ok">눈에 띄는 특이사항이 없어요. 👍</div>`}</div>` : ''}
+
+  <div class="grid g2">
+    <div class="card"><h2>최근 12개월 총액</h2><div class="chartbox sm"><canvas id="cMini"></canvas></div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px"><a class="btn ghost sm" href="#/trends">추이 자세히 →</a></div></div>
+    <div class="card"><h2>비중 큰 항목 TOP 3</h2>
+      ${t3.map((r, i) => `<div style="margin-bottom:12px"><div class="row between"><span><b>${i + 1}. ${esc(r.name)}</b></span><span class="num">${won(r.amount)} <span class="muted small">${r.share.toFixed(1)}%</span></span></div>
+        <div class="bar"><i style="width:${Math.min(100, r.share).toFixed(1)}%"></i></div></div>`).join('')}
+      <p class="muted small" style="margin:0">공제(음수) 항목을 제외한 부과액 기준 비중입니다.</p></div>
+  </div>
+
+  <div class="card"><h2>항목별 추이 <small>최근 12개월 · 진한 막대가 ${ymLabel(ym)}${prev ? ' (<span class="up">빨강 증가</span> / <span class="down">파랑 감소</span>)' : ''}</small></h2>
+    <div class="itemgrid">${cardRows.map((r, i) => `<div class="icard">
+      <div class="row between" style="flex-wrap:nowrap"><b class="iname">${esc(r.name)}</b>
+        ${r.status === 'new' ? '<span class="pill new">신규</span>' : r.status === 'removed' ? '<span class="pill gone">없음</span>'
+          : prev && r.diff ? `<span class="pill ${dirCls(r.diff)} num">${arrow(r.diff)} ${num(Math.abs(r.diff))}${r.pct != null ? ` (${pctStr(r.pct)})` : ''}</span>` : prev ? '<span class="pill gray">변동 없음</span>' : ''}</div>
+      <div class="iv num">${r.cur == null ? '-' : won(r.cur)}${r.curUsage != null ? `<span class="muted small"> · ${Number(r.curUsage).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${r.unit ? ' ' + esc(r.unit) : ''}</span>` : ''}</div>
+      <div class="chartbox xs"><canvas id="ci${i}"></canvas></div></div>`).join('')}</div></div>
+
+  <div class="card"><div class="row between"><h2 style="margin:0">항목별 ${prev ? '증감' : '금액'}</h2>
+    <a class="btn ghost sm" href="#/record/${ym}">기록 보기·수정</a></div>
+    <div class="tscroll" style="margin-top:10px">${compareTable(cmp, !!prev)}</div></div>
+
+  <div class="card"><h2>절약 팁 <small>우리 집에서 줄일 수 있는 항목</small></h2>
+    ${tips.length ? tips.map(t => `<div class="tip"><div class="row between"><b>${t.title}</b><span class="num">${won(t.amount)}</span></div>
+      ${t.notes.length ? `<div class="row" style="margin:4px 0">${t.notes.map(n => `<span class="pill gray">${esc(n)}</span>`).join('')}</div>` : ''}
+      <ul>${t.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')
+      : `<p class="muted">전기·수도·난방 등 사용량 항목이 인식되면 팁을 보여드려요.</p>`}
+  </div>`;
+
+  $('#ymSel').onchange = e => { state.dashYm = e.target.value; renderDashboard(); };
+  const im = lastN(12, ym);
+  cardRows.forEach((r, i) => {
+    const s = itemSeries(r.name, im);
+    const hasUsage = s.some(x => x.usage != null);
+    const curColor = !prev || !r.diff ? C.navy : r.diff > 0 ? C.up : C.down;
+    chart('ci' + i, { type: 'bar', data: { labels: im.map(m => monthOf(m) + '월'), datasets: [
+        { label: r.name, data: s.map(x => x.amt), backgroundColor: im.map(m => m === ym ? curColor : C.slate), borderRadius: 3, yAxisID: 'y', order: 2 },
+        ...(hasUsage ? [{ label: `사용량${r.unit ? ' (' + r.unit + ')' : ''}`, type: 'line', data: s.map(x => x.usage), borderColor: C.amber, backgroundColor: C.amber, borderWidth: 1.5, pointRadius: 1.5, tension: .3, spanGaps: true, yAxisID: 'y1', order: 1 }] : [])] },
+      options: { maintainAspectRatio: false, animation: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: c => ymLabel(im[c[0].dataIndex]), label: c => c.dataset.yAxisID === 'y1' ? `${c.dataset.label}: ${c.parsed.y ?? '-'}` : `금액: ${c.parsed.y == null ? '기록 없음' : won(c.parsed.y)}` } } },
+        scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
+          y: { beginAtZero: true, grid: { color: C.grid }, ticks: { font: { size: 10 }, maxTicksLimit: 3, callback: wonTick } },
+          ...(hasUsage ? { y1: { display: false, beginAtZero: true } } : {}) } } });
+  });
+  const months = lastN(12, ym);
+  chart('cMini', { type: 'bar', data: { labels: months.map(ymShort), datasets: [{ label: '총액', data: months.map(m => billByYm(m) ? sumItems(billByYm(m).items) : null),
+      backgroundColor: months.map(m => m === ym ? C.navy : C.slate), borderRadius: 6 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tooltipWon },
+      scales: { y: { ticks: { callback: wonTick }, grid: { color: C.grid } }, x: { grid: { display: false } } } } });
+}
+
+function anomHtml(a) {
+  const r = a.row;
+  const tag = { new: '<span class="pill new">신규</span>', removed: '<span class="pill gone">사라짐</span>', unit: '<span class="pill warn">단가 인상 의심</span>', swing: `<span class="pill ${dirCls(r.diff)}">${r.diff > 0 ? '급증' : '급감'}</span>` }[a.type];
+  let detail = '';
+  if (a.type === 'new') detail = `이번 달 ${won(r.cur)}`;
+  else if (a.type === 'removed') detail = `지난달 ${won(r.prev)} → 이번 달 없음`;
+  else if (a.type === 'unit') detail = `사용량 ${pctStr(r.usagePct)} · 요금 ${pctStr(r.pct)} · 단위당 요금 ${pctStr(r.unitPct)}`;
+  else detail = `${won(r.prev)} → ${won(r.cur)} (${signedWon(r.diff)}, ${pctStr(r.pct)})`;
+  const cls = a.type === 'unit' ? '' : (r.diff > 0 ? 'up' : r.diff < 0 ? 'down' : '');
+  return `<div class="anom ${cls}"><div class="row"><span class="h">${esc(r.name)}</span>${tag}<span class="small muted num">${detail}</span></div><div class="why">→ ${esc(a.why)}</div></div>`;
+}
+
+function usageCell(u, unit) { return u == null ? '' : `<div class="muted small num">${Number(u).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${unit ? ' ' + esc(unit) : ''}</div>`; }
+function compareTable(cmp, hasPrev) {
+  const body = cmp.rows.map(r => `<tr>
+    <td>${esc(r.name)} ${r.status === 'new' ? '<span class="pill new">신규</span>' : r.status === 'removed' ? '<span class="pill gone">없음</span>' : ''}</td>
+    ${hasPrev ? `<td class="num">${r.prev == null ? '-' : won(r.prev)}${usageCell(r.prevUsage, r.unit)}</td>` : ''}
+    <td class="num"><b>${r.cur == null ? '-' : won(r.cur)}</b>${usageCell(r.curUsage, r.unit)}</td>
+    ${hasPrev ? `<td class="num ${dirCls(r.diff)}">${r.diff ? arrow(r.diff) + ' ' + num(Math.abs(r.diff)) : '─'}</td>
+    <td class="num ${dirCls(r.diff)}">${r.pct == null ? (r.status ? '-' : '') : pctStr(r.pct)}</td>` : ''}
+  </tr>`).join('');
+  return `<table class="t"><thead><tr><th>항목</th>${hasPrev ? '<th>지난달</th>' : ''}<th>이번 달</th>${hasPrev ? '<th>증감(원)</th><th>증감률</th>' : ''}</tr></thead>
+    <tbody>${body}<tr class="sumrow"><td>합계</td>${hasPrev ? `<td class="num">${won(cmp.prevTotal)}</td>` : ''}<td class="num">${won(cmp.total)}</td>
+    ${hasPrev ? `<td class="num ${dirCls(cmp.totalDiff)}">${arrow(cmp.totalDiff)} ${num(Math.abs(cmp.totalDiff))}</td><td class="num ${dirCls(cmp.totalDiff)}">${pctStr(cmp.totalPct)}</td>` : ''}</tr></tbody></table>`;
+}
+
+/* --- 8-2. 고지서 등록 --- */
+function renderUpload() {
+  if (state.draft) { renderEditorPage(); return; }
+  const hasKey = state.settings.apiKey || state.settings.proxyUrl;
+  view.innerHTML = `
+  <div class="card"><h2>관리비 고지서 등록</h2>
+    ${hasKey ? '' : `<div class="notice">AI 분석을 쓰려면 <a href="#/settings">설정</a>에서 Claude API 키를 입력하세요. 키 없이도 <b>직접 입력</b>은 가능해요.</div>`}
+    <div class="drop" id="drop">
+      <p style="margin:0 0 12px"><b>아파트 앱 캡처 화면</b>이나 고지서 사진을 올려주세요.<br><span class="muted small">긴 화면은 여러 장으로 캡처해도 돼요 (최대 6장)</span></p>
+      <div class="row" style="justify-content:center">
+        <label class="btn">📷 촬영하기<input type="file" accept="image/*" capture="environment" id="fCam" hidden></label>
+        <label class="btn ghost">🖼️ 앨범·파일에서 선택<input type="file" accept="image/*" multiple id="fPick" hidden></label>
+      </div>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+    <div id="status"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="btnAnalyze" ${state.pendingImages.length && hasKey ? '' : 'disabled'}>🤖 AI로 분석하기</button>
+      <button class="btn ghost" id="btnManual">✍️ 직접 입력</button>
+    </div>
+  </div>`;
+  const drawThumbs = () => {
+    $('#thumbs').innerHTML = state.pendingImages.map((d, i) => `<div class="thumb"><img src="${d}" alt="고지서 ${i + 1}"><button data-i="${i}" aria-label="삭제">×</button></div>`).join('');
+    $$('#thumbs button').forEach(b => b.onclick = () => { state.pendingImages.splice(+b.dataset.i, 1); renderUpload(); });
+  };
+  drawThumbs();
+  const onFiles = async files => {
+    for (const f of [...files].slice(0, 6 - state.pendingImages.length)) {
+      try { state.pendingImages.push(await fileToJpeg(f)); } catch { toast('이미지를 읽지 못했어요: ' + f.name); }
+    }
+    renderUpload();
+  };
+  $('#fCam').onchange = e => onFiles(e.target.files);
+  $('#fPick').onchange = e => onFiles(e.target.files);
+  const drop = $('#drop');
+  drop.ondragover = e => { e.preventDefault(); drop.style.borderColor = '#0F4F4A'; };
+  drop.ondragleave = () => drop.style.borderColor = '';
+  drop.ondrop = e => { e.preventDefault(); drop.style.borderColor = ''; onFiles(e.dataTransfer.files); };
+  $('#btnManual').onclick = () => {
+    const prev = latestBill();
+    state.draft = { mode: 'new', yearMonth: prev ? ymAdd(prev.yearMonth, 1) : ymAdd(nowYm(), -1), ymEvidence: '',
+      items: prev ? prev.items.map(i => ({ name: i.name, amount: 0, usage: null, unit: i.unit || '' })) : STANDARD_ITEMS.slice(0, 8).map(n => ({ name: n, amount: 0, usage: null, unit: '' })),
+      images: state.pendingImages.slice(), billedTotal: null, memo: '', notes: prev ? '지난달 항목을 불러왔어요. 금액만 입력하세요.' : '', source: 'manual' };
+    renderEditorPage();
+  };
+  $('#btnAnalyze').onclick = async () => {
+    $('#btnAnalyze').disabled = true; $('#btnManual').disabled = true;
+    $('#status').innerHTML = `<div style="text-align:center;padding:24px"><div class="spinner"></div><b>AI가 고지서를 읽고 있어요…</b><div class="muted small">보통 20초~1분 정도 걸려요.</div></div>`;
+    try {
+      const r = await analyzeBill(state.pendingImages, state.settings);
+      state.draft = {
+        mode: 'new', yearMonth: isYm(r.year_month) ? r.year_month : ymAdd(nowYm(), -1), ymEvidence: r.year_month_evidence || '', ymAuto: isYm(r.year_month),
+        items: (r.items || []).map(i => ({ name: i.name, rawLabel: i.raw_label, amount: i.amount, usage: i.usage, unit: i.unit || '' })),
+        images: state.pendingImages.slice(), billedTotal: r.billed_total, memo: '', notes: r.notes || '', source: 'ai',
+      };
+      renderEditorPage();
+    } catch (e) {
+      $('#status').innerHTML = `<div class="notice err">${esc(e.message || e)}</div>`;
+      $('#btnAnalyze').disabled = false; $('#btnManual').disabled = false;
+    }
+  };
+}
+
+/* --- 8-3. 분석 결과 확인 · 수정 (신규 등록 / 기존 기록 수정 공용) --- */
+function renderEditorPage() {
+  const d = state.draft;
+  const isEdit = d.mode === 'edit';
+  view.innerHTML = `
+  <div class="card">
+    <div class="row between"><h2 style="margin:0">${isEdit ? '기록 수정' : (d.source === 'ai' ? 'AI 분석 결과 확인' : '직접 입력')}</h2>
+      <button class="btn ghost sm" id="btnCancel">취소</button></div>
+    <label class="lbl" for="ym">부과 연월</label>
+    <div class="row"><input class="f" type="month" id="ym" value="${d.yearMonth}" style="max-width:200px">
+      ${d.ymAuto ? `<span class="pill gray">자동 인식${d.ymEvidence ? ': “' + esc(d.ymEvidence) + '”' : ''}</span>` : ''}</div>
+    <div id="ymWarn"></div>
+    ${d.notes ? `<div class="notice">${esc(d.notes)}</div>` : ''}
+    <p class="muted small" style="margin:12px 0 6px">잘못 읽힌 금액은 바로 고칠 수 있어요. 공제·할인은 음수(-)로 입력하세요.</p>
+    <div class="tscroll"><table class="t ed"><thead><tr><th>항목</th><th>금액(원)</th><th>사용량</th><th>단위</th><th></th></tr></thead>
+      <tbody id="edRows"></tbody></table></div>
+    <button class="btn ghost sm" id="btnAdd" style="margin-top:8px">＋ 항목 추가</button>
+    <div class="card" style="background:#F7F8FB;box-shadow:none;margin:14px 0 0">
+      <div class="row between"><span>항목 합계</span><b class="num" id="edSum"></b></div>
+      ${d.billedTotal != null ? `<div class="row between small muted"><span>고지서 표기 합계</span><span class="num">${won(d.billedTotal)}</span></div>` : ''}
+      <div id="sumCheck"></div>
+    </div>
+    <label class="lbl" for="memo">메모</label>
+    <textarea class="f" id="memo" rows="2" placeholder="예: 이번 달부터 난방 시작">${esc(d.memo || '')}</textarea>
+    ${d.images?.length ? `<details style="margin-top:12px"><summary class="muted small">원본 이미지 보기 (${d.images.length}장)</summary><div class="origimgs" style="margin-top:8px">${d.images.map(s => `<img src="${s}" alt="고지서">`).join('')}</div></details>` : ''}
+    <button class="btn block" id="btnSave" style="margin-top:16px">✔ 확인하고 저장</button>
+  </div>`;
+
+  const drawRows = () => {
+    $('#edRows').innerHTML = d.items.map((it, i) => `<tr data-i="${i}">
+      <td><input class="name" list="itemNames" value="${esc(it.name)}" data-k="name" ${it.rawLabel && it.rawLabel !== it.name ? `title="고지서 표기: ${esc(it.rawLabel)}"` : ''}></td>
+      <td><input class="amt num" inputmode="numeric" value="${it.amount ? num(it.amount) : ''}" placeholder="0" data-k="amount"></td>
+      <td><input class="usage num" inputmode="decimal" value="${it.usage ?? ''}" data-k="usage"></td>
+      <td><input class="unit" value="${esc(it.unit || '')}" data-k="unit" placeholder="-"></td>
+      <td><button class="x" data-del="${i}" aria-label="삭제">×</button></td></tr>`).join('');
+    $$('#edRows input').forEach(inp => {
+      inp.oninput = () => {
+        const it = d.items[+inp.closest('tr').dataset.i], k = inp.dataset.k;
+        it[k] = k === 'amount' ? parseAmount(inp.value) : k === 'usage' ? parseNum(inp.value) : inp.value;
+        updSum();
+      };
+      if (inp.dataset.k === 'amount') inp.onblur = () => { const v = parseAmount(inp.value); inp.value = v ? num(v) : ''; };
+    });
+    $$('#edRows [data-del]').forEach(b => b.onclick = () => { d.items.splice(+b.dataset.del, 1); drawRows(); updSum(); });
+  };
+  const updSum = () => {
+    const s = sumItems(d.items);
+    $('#edSum').textContent = won(s);
+    $('#sumCheck').innerHTML = d.billedTotal != null && s !== d.billedTotal
+      ? `<div class="notice" style="margin-bottom:0">항목 합계가 고지서 합계와 <b>${num(Math.abs(s - d.billedTotal))}원</b> 차이 나요. 빠지거나 잘못 읽힌 항목이 없는지 확인해 주세요.</div>`
+      : d.billedTotal != null ? `<div class="notice ok" style="margin-bottom:0">고지서 합계와 일치해요 ✓</div>` : '';
+  };
+  const checkYm = () => {
+    const ym = $('#ym').value;
+    const clash = billByYm(ym) && !(isEdit && ym === d.originalId);
+    $('#ymWarn').innerHTML = clash ? `<div class="notice">${ymLabel(ym)} 기록이 이미 있어요. 저장하면 덮어씁니다.</div>` : '';
+  };
+  drawRows(); updSum(); checkYm();
+  $('#ym').onchange = () => { d.yearMonth = $('#ym').value; checkYm(); };
+  $('#memo').oninput = e => d.memo = e.target.value;
+  $('#btnAdd').onclick = () => { d.items.push({ name: '', amount: 0, usage: null, unit: '' }); drawRows(); $$('#edRows input.name').pop()?.focus(); };
+  $('#btnCancel').onclick = () => { const back = isEdit ? `#/record/${d.originalId}` : '#/upload'; state.draft = null; if (!isEdit) state.pendingImages = []; location.hash = back; route(); };
+  $('#btnSave').onclick = async () => {
+    const ym = $('#ym').value;
+    if (!isYm(ym)) { toast('부과 연월을 선택해 주세요.'); return; }
+    const items = d.items.filter(i => (i.name || '').trim() && (Number(i.amount) || i.usage != null)).map(i => ({
+      name: i.name.trim(), rawLabel: i.rawLabel || i.name.trim(), amount: Number(i.amount) || 0,
+      usage: i.usage == null || i.usage === '' ? null : Number(i.usage), unit: (i.unit || '').trim() }));
+    if (!items.length) { toast('항목을 하나 이상 입력해 주세요.'); return; }
+    if (billByYm(ym) && !(isEdit && ym === d.originalId) && !confirm(`${ymLabel(ym)} 기록을 덮어쓸까요?`)) return;
+    const old = isEdit ? billByYm(d.originalId) : null;
+    const now = new Date().toISOString();
+    const bill = { id: ym, yearMonth: ym, items, total: sumItems(items), billedTotal: d.billedTotal ?? null, memo: d.memo || '',
+      source: old?.source === 'sample' ? 'sample' : (old?.source || d.source), imageCount: d.images?.length || 0,
+      createdAt: old?.createdAt || now, updatedAt: now, schemaVersion: 1 };
+    if (isEdit && d.originalId !== ym) await repo.deleteBill(d.originalId);
+    await repo.putBill(bill);
+    await repo.putImages(ym, d.images || []);
+    state.draft = null; state.pendingImages = []; state.dashYm = ym;
+    await reload(); toast(`${ymLabel(ym)} 관리비를 저장했어요.`);
+    location.hash = '#/';
+  };
+}
+
+/* --- 8-4. 월별 추이 --- */
+function renderTrends() {
+  if (!state.bills.length) { view.innerHTML = emptyState(); return; }
+  const months = lastN(12);
+  const totals = months.map(m => billByYm(m) ? sumItems(billByYm(m).items) : null);
+  const valid = totals.filter(v => v != null);
+  const avg = valid.reduce((s, v) => s + v, 0) / valid.length;
+  // 항목 목록: 누적 금액 큰 순
+  const sums = {};
+  state.bills.forEach(b => aggregate(b.items).forEach((e, n) => sums[n] = (sums[n] || 0) + Math.abs(e.amount)));
+  const names = Object.keys(sums).sort((a, b) => sums[b] - sums[a]);
+  if (!state.trendItem || !names.includes(state.trendItem)) state.trendItem = names.find(n => USAGE_KINDS.includes(kindOf(n))) || names[0];
+  const years = [...new Set(state.bills.map(b => b.yearMonth.slice(0, 4)))].sort().reverse();
+  if (!state.statYear || !years.includes(state.statYear)) state.statYear = years[0];
+  const yb = state.bills.filter(b => b.yearMonth.startsWith(state.statYear));
+  const ysum = yb.reduce((s, b) => s + sumItems(b.items), 0);
+  const ymax = yb.reduce((m, b) => !m || sumItems(b.items) > sumItems(m.items) ? b : m, null);
+  const ymin = yb.reduce((m, b) => !m || sumItems(b.items) < sumItems(m.items) ? b : m, null);
+  const prevYearBills = state.bills.filter(b => b.yearMonth.startsWith(String(+state.statYear - 1)));
+  const hasYoY = prevYearBills.length > 0;
+
+  view.innerHTML = `
+  <div class="card"><div class="row between"><h2 style="margin:0">연간 요약</h2>
+    <select class="f" id="yearSel" style="width:auto">${years.map(y => `<option ${y === state.statYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+    <div class="grid g3 kpis" style="margin-top:12px">
+      <div class="kpi" style="background:#F7F8FB;border-radius:10px"><div class="k">연간 합계 (${yb.length}개월)</div><div class="v num">${won(ysum)}</div></div>
+      <div class="kpi" style="background:#F7F8FB;border-radius:10px"><div class="k">월평균</div><div class="v num">${won(ysum / (yb.length || 1))}</div></div>
+      <div class="kpi" style="background:#F7F8FB;border-radius:10px"><div class="k">가장 많이 나온 달</div><div class="v num">${ymax ? `${monthOf(ymax.yearMonth)}월` : '-'}</div>
+        <div class="d muted num">${ymax ? won(sumItems(ymax.items)) : ''}${ymin && ymin !== ymax ? ` · 최저 ${monthOf(ymin.yearMonth)}월` : ''}</div></div>
+    </div></div>
+
+  <div class="card"><h2>최근 12개월 총액 추이 <small>점선: 평균 ${won(avg)}</small></h2><div class="chartbox"><canvas id="cTotal"></canvas></div></div>
+
+  <div class="card"><div class="row between"><h2 style="margin:0">항목별 추이</h2>
+    <select class="f" id="itemSel" style="width:auto;max-width:60%">${names.map(n => `<option ${n === state.trendItem ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>
+    <div class="chartbox" style="margin-top:10px"><canvas id="cItem"></canvas></div>
+    <p class="muted small" style="margin:6px 0 0">막대: 금액, 선: 사용량(고지서에 있을 때)</p></div>
+
+  <div class="card"><h2>작년 같은 달과 비교</h2>
+    ${hasYoY ? `<div class="chartbox"><canvas id="cYoY"></canvas></div><div class="tscroll" style="margin-top:10px">${yoyTable()}</div>`
+      : `<p class="muted">작년 데이터가 쌓이면 ${state.statYear}년과 ${+state.statYear - 1}년을 월별로 비교해 드려요.</p>`}</div>`;
+
+  $('#yearSel').onchange = e => { state.statYear = e.target.value; renderTrends(); };
+  $('#itemSel').onchange = e => { state.trendItem = e.target.value; renderTrends(); };
+
+  chart('cTotal', { type: 'bar', data: { labels: months.map(ymShort), datasets: [
+      { label: '총액', data: totals, backgroundColor: months.map((m, i) => i === months.length - 1 ? C.navy : C.slate), borderRadius: 6, order: 2 },
+      { label: '평균', type: 'line', data: months.map(() => avg), borderColor: C.navy2, borderDash: [5, 5], pointRadius: 0, borderWidth: 1.5, order: 1 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tooltipWon },
+      scales: { y: { ticks: { callback: wonTick }, grid: { color: C.grid } }, x: { grid: { display: false } } } } });
+
+  const s = itemSeries(state.trendItem, months);
+  const unit = s.find(x => x.unit)?.unit || '';
+  const hasUsage = s.some(x => x.usage != null);
+  chart('cItem', { type: 'bar', data: { labels: months.map(ymShort), datasets: [
+      { label: state.trendItem, data: s.map(x => x.amt), backgroundColor: C.navy2, borderRadius: 6, yAxisID: 'y', order: 2 },
+      ...(hasUsage ? [{ label: `사용량${unit ? ' (' + unit + ')' : ''}`, type: 'line', data: s.map(x => x.usage), borderColor: C.amber, backgroundColor: C.amber, yAxisID: 'y1', tension: .3, spanGaps: true, order: 1 }] : [])] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: hasUsage, position: 'bottom' }, tooltip: tooltipWon },
+      scales: { y: { ticks: { callback: wonTick }, grid: { color: C.grid } }, x: { grid: { display: false } },
+        ...(hasUsage ? { y1: { position: 'right', grid: { display: false }, title: { display: !!unit, text: unit } } } : {}) } } });
+
+  if (hasYoY) {
+    const y = +state.statYear, lbl = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
+    const ser = yr => lbl.map((_, i) => { const b = billByYm(`${yr}-${String(i + 1).padStart(2, '0')}`); return b ? sumItems(b.items) : null; });
+    chart('cYoY', { type: 'line', data: { labels: lbl, datasets: [
+        { label: `${y}년`, data: ser(y), borderColor: C.navy, backgroundColor: C.navy, tension: .3, spanGaps: true },
+        { label: `${y - 1}년`, data: ser(y - 1), borderColor: C.slate, backgroundColor: C.slate, borderDash: [4, 4], tension: .3, spanGaps: true }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: tooltipWon },
+        scales: { y: { ticks: { callback: wonTick }, grid: { color: C.grid } }, x: { grid: { display: false } } } } });
+  }
+}
+function yoyTable() {
+  const y = +state.statYear;
+  const rows = [];
+  for (let m = 1; m <= 12; m++) {
+    const mm = String(m).padStart(2, '0'), a = billByYm(`${y}-${mm}`), b = billByYm(`${y - 1}-${mm}`);
+    if (!a || !b) continue;
+    const ta = sumItems(a.items), tb = sumItems(b.items), d = ta - tb;
+    rows.push(`<tr><td>${m}월</td><td class="num">${won(tb)}</td><td class="num">${won(ta)}</td><td class="num ${dirCls(d)}">${arrow(d)} ${num(Math.abs(d))}</td><td class="num ${dirCls(d)}">${pctStr(d / tb * 100)}</td></tr>`);
+  }
+  return rows.length ? `<table class="t"><thead><tr><th>월</th><th>${y - 1}년</th><th>${y}년</th><th>증감(원)</th><th>증감률</th></tr></thead><tbody>${rows.join('')}</tbody></table>` : '<p class="muted small">같은 달 데이터가 아직 없어요.</p>';
+}
+
+/* --- 8-5. 기록 목록 · 상세 --- */
+async function renderRecords() {
+  if (!state.bills.length) { view.innerHTML = emptyState(); return; }
+  const list = state.bills.slice().reverse();
+  view.innerHTML = `<div class="card"><div class="row between"><h2 style="margin:0">월별 기록 <small>${list.length}건</small></h2>
+    <div class="row"><button class="btn ghost sm" id="csvLong">CSV 내보내기</button><a class="btn sm" href="#/upload">＋ 등록</a></div></div>
+    <div id="recList" style="margin-top:6px">${list.map(b => {
+      const p = billByYm(ymAdd(b.yearMonth, -1)), t = sumItems(b.items), d = p ? t - sumItems(p.items) : null;
+      return `<a class="rec" href="#/record/${b.id}"><div class="ph" data-ph="${b.id}">${b.imageCount ? '' : '이미지<br>없음'}</div>
+        <div class="m"><b>${ymLabel(b.yearMonth)}</b><span class="muted small">${b.items.length}개 항목${b.source === 'sample' ? ' · 샘플' : b.source === 'manual' ? ' · 직접 입력' : ''}${b.memo ? ' · ' + esc(b.memo) : ''}</span></div>
+        <div class="amt"><b class="num">${won(t)}</b>${d != null ? `<div class="small num ${dirCls(d)}">${arrow(d)} ${num(Math.abs(d))}원</div>` : ''}</div></a>`;
+    }).join('')}</div></div>`;
+  $('#csvLong').onclick = () => exportCsv('long');
+  for (const b of list) if (b.imageCount) {
+    const imgs = await repo.getImages(b.id);
+    const el = document.querySelector(`[data-ph="${b.id}"]`);
+    if (el && imgs[0]) el.innerHTML = `<img src="${imgs[0]}" alt="">`;
+  }
+}
+
+async function renderRecordDetail(id) {
+  const b = billByYm(id);
+  if (!b) { view.innerHTML = `<div class="card empty"><p>기록을 찾을 수 없어요.</p><a class="btn" href="#/records">목록으로</a></div>`; return; }
+  const imgs = await repo.getImages(id);
+  const prev = billByYm(ymAdd(id, -1));
+  const cmp = compare(b, prev);
+  view.innerHTML = `
+  <div class="card"><div class="row between"><div><a href="#/records" class="muted small" style="text-decoration:none">← 목록</a>
+      <h2 style="margin:4px 0 0">${ymLabel(id)} 관리비</h2></div>
+      <div class="row"><button class="btn ghost sm" id="btnEdit">수정</button><button class="btn danger sm" id="btnDel">삭제</button></div></div>
+    <div style="font-size:28px;font-weight:800;margin:10px 0 2px" class="num">${won(cmp.total)}</div>
+    ${b.billedTotal != null && b.billedTotal !== cmp.total ? `<div class="small muted">고지서 표기 합계 ${won(b.billedTotal)}</div>` : ''}
+    ${b.memo ? `<p class="small">📝 ${esc(b.memo)}</p>` : ''}
+    <p class="muted small" style="margin:4px 0 0">${b.source === 'ai' ? 'AI 분석' : b.source === 'sample' ? '샘플 데이터' : '직접 입력'} · 저장 ${new Date(b.updatedAt).toLocaleString('ko-KR')}</p>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h2>분석 결과 ${prev ? '<small>지난달 대비</small>' : ''}</h2><div class="tscroll">${compareTable(cmp, !!prev)}</div></div>
+    <div class="card"><h2>원본 이미지</h2>${imgs.length ? `<div class="origimgs">${imgs.map(s => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="고지서 원본"></a>`).join('')}</div>` : '<p class="muted">저장된 이미지가 없어요.</p>'}</div>
+  </div>`;
+  $('#btnDel').onclick = async () => {
+    if (!confirm(`${ymLabel(id)} 기록과 원본 이미지를 삭제할까요? 되돌릴 수 없어요.`)) return;
+    await repo.deleteBill(id); await reload(); toast('삭제했어요.'); location.hash = '#/records';
+  };
+  $('#btnEdit').onclick = () => {
+    state.draft = { mode: 'edit', originalId: id, yearMonth: id, items: b.items.map(i => ({ ...i })), images: imgs, billedTotal: b.billedTotal, memo: b.memo, notes: '', source: b.source };
+    renderEditorPage();
+  };
+}
+
+/* --- 8-6. 설정 · 데이터 관리 --- */
+function renderSettings() {
+  const s = state.settings, h = s.household;
+  view.innerHTML = `
+  <div class="card"><h2>Claude API</h2>
+    <label class="lbl" for="apiKey">API 키 <span class="small">(이 브라우저에만 저장 · 프록시를 쓰면 여기에 프록시 접속 암호 입력)</span></label>
+    <input class="f" type="password" id="apiKey" value="${esc(s.apiKey)}" placeholder="sk-ant-..." autocomplete="off">
+    <label class="lbl" for="proxyUrl">프록시 주소 <span class="small">(배포 시 권장 · 입력하면 API 키 대신 사용)</span></label>
+    <input class="f" id="proxyUrl" value="${esc(s.proxyUrl)}" placeholder="https://apt-bill-proxy.내계정.workers.dev">
+    <label class="lbl" for="model">분석 모델</label>
+    <select class="f" id="model">${MODELS.map(m => `<option value="${m.id}" ${m.id === s.model ? 'selected' : ''}>${m.label}</option>`).join('')}</select>
+    <div class="notice">API 키를 브라우저에 직접 넣는 방식은 <b>본인 기기에서 혼자 쓸 때만</b> 사용하세요. 인터넷에 공개 배포한다면 프록시를 쓰세요(README 참고).</div>
+  </div>
+  <div class="card"><h2>우리 집 정보 <small>AI 분석 기준</small></h2>
+    <div class="grid g2">
+      <div><label class="lbl">아파트명</label><input class="f" id="hApt" value="${esc(h.aptName)}"></div>
+      <div><label class="lbl">난방 방식</label><select class="f" id="hHeat">${['중앙난방', '지역난방', '개별난방'].map(x => `<option ${x === h.heating ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+      <div><label class="lbl">평형 / 전용면적(㎡)</label><div class="row" style="flex-wrap:nowrap"><input class="f" id="hPy" type="number" value="${h.pyeong}"><input class="f" id="hArea" type="number" value="${h.area}"></div></div>
+      <div><label class="lbl">가족 수</label><input class="f" id="hMem" type="number" value="${h.members}"></div>
+    </div>
+    <button class="btn" id="btnSaveSet" style="margin-top:14px">설정 저장</button>
+  </div>
+  <div class="card"><h2>데이터 관리</h2>
+    <div class="row">
+      <button class="btn ghost" id="csvLong">CSV (항목별 세로형)</button>
+      <button class="btn ghost" id="csvWide">CSV (월×항목 가로형)</button>
+      <button class="btn ghost" id="jsonOut">전체 백업(JSON)</button>
+      <label class="btn ghost">백업 복원<input type="file" id="jsonIn" accept="application/json" hidden></label>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+    <div class="row">
+      <button class="btn ghost" id="sampleIn">샘플 데이터 넣기</button>
+      <button class="btn ghost" id="sampleOut">샘플 데이터 지우기</button>
+      <button class="btn danger" id="wipe">전체 삭제</button>
+    </div>
+    <p class="muted small">데이터는 이 브라우저(IndexedDB)에 저장돼요. 브라우저 데이터를 지우면 사라지니 가끔 백업(JSON)을 받아두세요.</p>
+  </div>`;
+  $('#btnSaveSet').onclick = async () => {
+    state.settings = { ...s, apiKey: $('#apiKey').value.trim(), proxyUrl: $('#proxyUrl').value.trim(), model: $('#model').value,
+      household: { ...h, aptName: $('#hApt').value.trim(), heating: $('#hHeat').value, pyeong: +$('#hPy').value, area: +$('#hArea').value, members: +$('#hMem').value } };
+    await repo.saveSettings(state.settings); setHeader(); toast('설정을 저장했어요.');
+  };
+  $('#csvLong').onclick = () => exportCsv('long');
+  $('#csvWide').onclick = () => exportCsv('wide');
+  $('#jsonOut').onclick = exportJson;
+  $('#jsonIn').onchange = e => importJson(e.target.files[0]);
+  $('#sampleIn').onclick = async () => {
+    if (state.bills.some(b => b.source !== 'sample') && !confirm('같은 달 기록이 있으면 샘플로 덮어쓰지 않고 건너뜁니다. 계속할까요?')) return;
+    await insertSample(); await reload(); toast('샘플 데이터를 넣었어요.'); state.dashYm = null; location.hash = '#/';
+  };
+  $('#sampleOut').onclick = async () => { for (const b of state.bills.filter(b => b.source === 'sample')) await repo.deleteBill(b.id); await reload(); toast('샘플 데이터를 지웠어요.'); };
+  $('#wipe').onclick = async () => {
+    if (!confirm('모든 관리비 기록과 이미지를 삭제할까요? 되돌릴 수 없어요.')) return;
+    if (prompt('확인을 위해 "삭제"라고 입력하세요.') !== '삭제') return;
+    await repo.clearAll(); await reload(); toast('전체 삭제했어요.');
+  };
+}
+
+/* ---------- 9. 내보내기 · 백업 · 샘플 ---------- */
+function download(name, text, type) {
+  const blob = new Blob([text], { type }); const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const csvCell = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+function exportCsv(kind) {
+  if (!state.bills.length) { toast('내보낼 데이터가 없어요.'); return; }
+  let rows;
+  if (kind === 'long') {
+    rows = [['연월', '항목', '고지서표기', '금액(원)', '사용량', '단위', '월합계(원)', '메모']];
+    for (const b of state.bills) for (const i of b.items) rows.push([b.yearMonth, i.name, i.rawLabel || '', i.amount, i.usage ?? '', i.unit || '', sumItems(b.items), b.memo || '']);
+  } else {
+    const names = [...new Set(state.bills.flatMap(b => b.items.map(i => i.name)))];
+    rows = [['연월', ...names, '합계']];
+    for (const b of state.bills) { const a = aggregate(b.items); rows.push([b.yearMonth, ...names.map(n => a.get(n)?.amount ?? ''), sumItems(b.items)]); }
+  }
+  // 엑셀에서 한글이 깨지지 않도록 UTF-8 BOM 추가
+  download(`관리비_${kind === 'long' ? '항목별' : '월별'}_${nowYm()}.csv`, '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
+}
+async function exportJson() {
+  const bills = await repo.listBills();
+  const images = {}; for (const b of bills) images[b.id] = await repo.getImages(b.id);
+  download(`관리비_백업_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ app: 'apt-bill', schemaVersion: 1, exportedAt: new Date().toISOString(), bills, images }), 'application/json');
+}
+async function importJson(file) {
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.bills)) throw new Error('형식 오류');
+    if (!confirm(`${data.bills.length}개월 기록을 복원할까요? 같은 달 기록은 백업 내용으로 덮어씁니다.`)) return;
+    for (const b of data.bills) { if (!isYm(b.yearMonth)) continue; await repo.putBill({ ...b, id: b.yearMonth }); await repo.putImages(b.yearMonth, data.images?.[b.id] || []); }
+    await reload(); toast('복원했어요.');
+  } catch (e) { toast('백업 파일을 읽지 못했어요: ' + e.message); }
+}
+
+async function insertSample() {
+  // 84㎡·4인·중앙난방 가정의 그럴듯한 가상 데이터 (최근 14개월)
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const end = ymAdd(nowYm(), -1);
+  const months = Array.from({ length: 14 }, (_, i) => ymAdd(end, i - 13));
+  const kwh = { 1: 330, 2: 310, 3: 290, 4: 270, 5: 280, 6: 320, 7: 430, 8: 470, 9: 350, 10: 290, 11: 300, 12: 330 };
+  const water = { 1: 17, 2: 16, 3: 17, 4: 18, 5: 19, 6: 21, 7: 23, 8: 24, 9: 21, 10: 19, 11: 18, 12: 17 };
+  const hot = { 1: 9.5, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4.5, 8: 4.5, 9: 5, 10: 6.5, 11: 8, 12: 9.5 };
+  const gcal = { 1: 1.75, 2: 1.5, 3: 0.95, 4: 0.35, 10: 0.3, 11: 0.95, 12: 1.6 };
+  const elecFee = (k, summer) => { const [a, b] = summer ? [300, 450] : [200, 400]; let f = 910 + Math.min(k, a) * 120; if (k > a) f += (Math.min(k, b) - a) * 215 + 600; if (k > b) f += (k - b) * 307 + 5400; return Math.round(f * 1.137 / 10) * 10; };
+  const existing = new Set(state.bills.map(b => b.yearMonth));
+  for (const [idx, ym] of months.entries()) {
+    if (existing.has(ym) && billByYm(ym).source !== 'sample') continue;
+    const m = monthOf(ym), y = +ym.slice(0, 4), raise = y >= 2026 ? 1.04 : 1, isLast = idx === months.length - 1;
+    const jit = (v, p = .03) => Math.round(v * (1 + (rnd() - .5) * 2 * p) / 10) * 10;
+    const k = Math.round(kwh[m] * (0.95 + rnd() * .1)), w = Math.round(water[m] * (0.95 + rnd() * .1)), hw = +(hot[m] * (0.93 + rnd() * .14)).toFixed(1);
+    const waterUnit = isLast ? 1350 : 1180; // 최근 달: 수도 단가 인상 시나리오
+    const items = [
+      { name: '일반관리비', amount: jit(52000 * raise, .01) }, { name: '청소비', amount: jit(18500 * raise, .01) },
+      { name: '경비비', amount: jit(27000 * raise, .01) }, { name: '소독비', amount: 1200 },
+      { name: '승강기유지비', amount: jit(m === 4 ? 9800 : 4800, .02) }, { name: '수선유지비', amount: jit(3500, .2) },
+      { name: '장기수선충당금', amount: 21020 }, { name: '위탁관리수수료', amount: 1480 }, { name: '화재보험료', amount: 2110 },
+      { name: '공동전기료', amount: jit(isSummer(m) ? 16500 : 11800, .06) }, { name: '공동수도료', amount: jit(2400, .1) },
+      { name: '세대전기료', amount: elecFee(k, isSummer(m)), usage: k, unit: 'kWh' },
+      { name: '세대수도료', amount: Math.round(w * waterUnit / 10) * 10, usage: w, unit: '㎥' },
+      { name: '급탕비', amount: Math.round(hw * 7900 / 10) * 10, usage: hw, unit: '㎥' },
+      { name: '가스료', amount: jit(isWinter(m) ? 13500 : 9800, .08), usage: isWinter(m) ? 14 : 10, unit: '㎥' },
+      { name: 'TV수신료', amount: 2500 }, { name: '잡수입공제', amount: -jit(1800, .3) },
+    ];
+    if (gcal[m]) items.splice(13, 0, { name: '난방비', amount: Math.round(gcal[m] * (0.95 + rnd() * .1) * 98000 / 10) * 10, usage: gcal[m], unit: 'Gcal' });
+    if (isLast) items.push({ name: '선거관리위원회운영비', amount: 600 });
+    const now = new Date().toISOString();
+    await repo.putBill({ id: ym, yearMonth: ym, items, total: sumItems(items), billedTotal: sumItems(items), memo: '', source: 'sample', imageCount: 0, createdAt: now, updatedAt: now, schemaVersion: 1 });
+    await repo.putImages(ym, []);
+  }
+}
+
+/* ---------- 10. 라우터 ---------- */
+const NAV = [
+  { h: '#/', ic: '📊', t: '대시보드' }, { h: '#/upload', ic: '➕', t: '등록' }, { h: '#/trends', ic: '📈', t: '추이' },
+  { h: '#/records', ic: '🗂️', t: '기록' }, { h: '#/settings', ic: '⚙️', t: '설정' },
+];
+function setHeader() { const h = state.settings.household; $('#aptSub').textContent = `${h.aptName} · ${h.pyeong}평(${h.area}㎡) · ${h.members}인 · ${h.heating}`; }
+function drawNav(cur) {
+  const active = h => h === cur || (h === '#/records' && cur.startsWith('#/record'));
+  $('#deskNav').innerHTML = NAV.map(n => `<a href="${n.h}" class="${active(n.h) ? 'active' : ''}">${n.t}</a>`).join('');
+  $('#mobNav').innerHTML = NAV.map(n => `<a href="${n.h}" class="${active(n.h) ? 'active' : ''}"><span class="ic">${n.ic}</span>${n.t}</a>`).join('');
+}
+async function route() {
+  const h = location.hash || '#/';
+  destroyCharts(); drawNav(h); window.scrollTo(0, 0);
+  if (state.draft?.mode === 'edit' && !h.startsWith('#/record/')) state.draft = null;
+  try {
+    if (h === '#/' || h === '#') renderDashboard();
+    else if (h === '#/upload') renderUpload();
+    else if (h === '#/trends') renderTrends();
+    else if (h === '#/records') await renderRecords();
+    else if (h.startsWith('#/record/')) await renderRecordDetail(decodeURIComponent(h.slice(9)));
+    else if (h === '#/settings') renderSettings();
+    else renderDashboard();
+  } catch (e) { console.error(e); view.innerHTML = `<div class="card notice err">화면을 그리는 중 오류가 났어요: ${esc(e.message)}</div>`; }
+}
+
+(async function init() {
+  $('#itemNames').innerHTML = STANDARD_ITEMS.map(n => `<option value="${n}">`).join('');
+  state.settings = await repo.getSettings();
+  setHeader();
+  await reload();
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+node_modules/
+.wrangler/
+.dev.vars
+*.json.bak
+관리비_백업_*.json
+관리비_*.csv
