@@ -1035,6 +1035,9 @@ function renderSettings() {
     <input class="f" id="proxyUrl" value="${esc(s.proxyUrl)}" placeholder="https://apt-bill-proxy.내계정.workers.dev">
     <label class="lbl" for="model">분석 모델</label>
     <select class="f" id="model">${MODELS.map(m => `<option value="${m.id}" ${m.id === s.model ? 'selected' : ''}>${m.label}</option>`).join('')}</select>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="btnCheck">🔌 연결 확인</button>
+      <span class="muted small">지금 입력한 값으로 확인해요 · 요금 없음</span></div>
+    <div id="checkResult"></div>
     <div class="notice">API 키를 브라우저에 직접 넣는 방식은 <b>본인 기기에서 혼자 쓸 때만</b> 사용하세요. 인터넷에 공개 배포한다면 프록시를 쓰세요(README 참고).</div>
   </div>
   <div class="card"><h2>우리 집 정보 <small>AI 분석 기준</small></h2>
@@ -1084,7 +1087,9 @@ function renderSettings() {
     try { await reload(); toast(repo.kind === 'server' ? '설정을 저장했어요. 서버에 연결됐어요 ☁️' : '설정을 저장했어요.'); }
     catch (err) { state.bills = []; toast(err.message, 6000); }
     renderSettings();
+    if (state.settings.apiKey || state.settings.proxyUrl) runCheck(state.settings); // 저장 후 자동 검증
   };
+  $('#btnCheck').onclick = () => runCheck({ apiKey: $('#apiKey').value.trim(), proxyUrl: $('#proxyUrl').value.trim(), model: $('#model').value });
   $('#csvLong').onclick = () => exportCsv('long');
   $('#csvWide').onclick = () => exportCsv('wide');
   $('#jsonOut').onclick = exportJson;
@@ -1099,6 +1104,64 @@ function renderSettings() {
     if (prompt('확인을 위해 "삭제"라고 입력하세요.') !== '삭제') return;
     await repo.clearAll(); await reload(); toast('전체 삭제했어요.');
   };
+}
+
+/* --- 8-7. API 키 · 프록시 연결 확인 (Models API 조회만 하므로 요금 없음) --- */
+async function runCheck(s) {
+  const box = $('#checkResult'), btn = $('#btnCheck');
+  if (!box) return;
+  btn && (btn.disabled = true);
+  box.innerHTML = `<div class="notice" style="background:#F3F5F9;color:var(--muted)">확인 중…</div>`;
+  let lines;
+  try { lines = await checkConnection(s); } catch (e) { lines = [{ ok: false, text: '확인 중 오류: ' + (e.message || e) }]; }
+  const allOk = lines.every(l => l.ok);
+  box.innerHTML = `<div class="notice ${allOk ? 'ok' : lines.some(l => !l.ok && !l.warn) ? 'err' : ''}">
+    ${lines.map(l => `<div>${l.ok ? '✅' : l.warn ? '⚠️' : '❌'} ${esc(l.text)}</div>`).join('')}
+    ${allOk ? '<div style="margin-top:4px"><b>모두 정상이에요. 고지서 분석을 쓸 수 있어요.</b></div>' : ''}</div>`;
+  btn && (btn.disabled = false);
+}
+
+async function checkConnection(s) {
+  const model = s.model || MODELS[0].id;
+  // 1) 프록시 사용: 접속 암호 → 서버에 등록된 API 키 → 모델 → 저장소 순서로 확인
+  if (s.proxyUrl) {
+    if (!/^https:\/\//.test(s.proxyUrl)) return [{ ok: false, text: '프록시 주소는 https:// 로 시작해야 해요.' }];
+    if (!location.protocol.startsWith('http')) return [{ ok: false, text: '파일로 연 앱은 프록시를 쓸 수 없어요. https://sunguphong.github.io/apt-bill/ 에서 열어 주세요.' }];
+    if (!s.apiKey) return [{ ok: false, text: 'API 키 칸에 프록시 접속 암호(APP_PASSCODE)를 입력해 주세요.' }];
+    let r;
+    try { r = await fetch(s.proxyUrl.replace(/\/$/, '') + '/api/check?model=' + encodeURIComponent(model), { headers: { 'x-api-key': s.apiKey } }); }
+    catch { return [{ ok: false, text: '프록시 서버에 연결하지 못했어요. 프록시 주소와 인터넷 연결을 확인해 주세요.' }]; }
+    if (r.status === 403) return [{ ok: true, text: '프록시 서버 응답' }, { ok: false, text: `이 주소(${location.origin})는 프록시 허용 주소(ALLOWED_ORIGIN)가 아니에요.` }];
+    if (r.status === 401) return [{ ok: true, text: '프록시 서버 응답' }, { ok: false, text: '접속 암호가 맞지 않아요. Cloudflare에 등록한 APP_PASSCODE 값을 넣어 주세요. (Claude API 키가 아니에요)' }];
+    if (r.status === 404) return [{ ok: true, text: '프록시 서버 응답' }, { ok: false, text: '프록시가 예전 버전이라 확인 기능이 없어요. 프록시를 다시 배포해 주세요.' }];
+    if (!r.ok) return [{ ok: false, text: `프록시 서버 오류 (${r.status})` }];
+    const d = await r.json(), out = [{ ok: true, text: '프록시 서버 연결 · 접속 암호 확인' }];
+    if (!d.apiKey.ok) out.push({ ok: false, text: d.apiKey.configured === false ? '서버에 Claude API 키(ANTHROPIC_API_KEY)가 등록되지 않았어요.' : `서버에 등록된 Claude API 키가 유효하지 않아요 (${d.apiKey.status || '연결 실패'}). Cloudflare의 ANTHROPIC_API_KEY를 확인해 주세요.` });
+    else {
+      out.push({ ok: true, text: '서버에 등록된 Claude API 키 유효' });
+      out.push(d.model.ok ? { ok: true, text: `분석 모델 사용 가능: ${model}` } : { ok: false, text: `이 키로는 ${model} 모델을 쓸 수 없어요 (${d.model.status}). 다른 모델을 골라 보세요.` });
+    }
+    out.push(d.storage?.ok ? { ok: true, text: '서버 저장소(기록·이미지) 정상' } : { ok: false, text: '서버 저장소 오류: ' + (d.storage?.message || '알 수 없음') });
+    return out;
+  }
+  // 2) 브라우저에 API 키 직접 입력
+  if (!s.apiKey) return [{ ok: false, text: 'API 키를 입력해 주세요. (platform.claude.com → API Keys)' }];
+  const out = [];
+  if (!/^sk-ant-api/.test(s.apiKey)) out.push({ ok: false, warn: true, text: 'Claude API 키는 보통 sk-ant-api 로 시작해요. platform.claude.com의 API Keys에서 발급한 키인지 확인해 주세요.' });
+  const { default: Anthropic } = await import(SDK_URL);
+  const client = new Anthropic({ apiKey: s.apiKey, dangerouslyAllowBrowser: true, maxRetries: 0 });
+  try {
+    await client.models.retrieve(model);
+    out.push({ ok: true, text: 'Claude API 키 유효' }, { ok: true, text: `분석 모델 사용 가능: ${model}` });
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) out.push({ ok: false, text: 'API 키가 올바르지 않아요 (401). 키를 다시 복사해 넣어 주세요.' });
+    else if (e instanceof Anthropic.PermissionDeniedError) out.push({ ok: false, text: '이 키에는 사용 권한이 없어요 (403). 콘솔에서 키 상태를 확인해 주세요.' });
+    else if (e instanceof Anthropic.NotFoundError) out.push({ ok: true, text: 'Claude API 키 유효' }, { ok: false, text: `이 키로는 ${model} 모델을 쓸 수 없어요. 다른 모델을 골라 보세요.` });
+    else if (e instanceof Anthropic.RateLimitError) out.push({ ok: true, text: 'Claude API 키 유효' }, { ok: false, warn: true, text: '요청이 많아 잠시 제한됐어요. 잠시 후 다시 확인해 주세요.' });
+    else if (e instanceof Anthropic.APIConnectionError) out.push({ ok: false, text: 'Claude API에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.' });
+    else out.push({ ok: false, text: '확인 중 오류: ' + (e.message || e) });
+  }
+  return out;
 }
 
 /* ---------- 9. 내보내기 · 백업 · 샘플 ---------- */

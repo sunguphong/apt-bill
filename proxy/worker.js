@@ -39,6 +39,27 @@ export default {
         return new Response(upstream.body, { status: upstream.status, headers: out });
       }
 
+      // ---- 연결 확인 (요금 없음: Models API 조회만 함) ----
+      if (path === '/api/check' && req.method === 'GET') {
+        const model = url.searchParams.get('model') || 'claude-opus-5-5';
+        const out = { passcode: { ok: true } };
+        try {
+          const r = await fetch('https://api.anthropic.com/v1/models/' + encodeURIComponent(model), {
+            headers: { 'x-api-key': env.ANTHROPIC_API_KEY || '', 'anthropic-version': '2023-06-01' },
+          });
+          let message = '';
+          if (!r.ok) { try { message = (await r.json())?.error?.message || ''; } catch {} }
+          out.apiKey = { ok: r.status !== 401 && r.status !== 403, status: r.status, message, configured: !!env.ANTHROPIC_API_KEY };
+          out.model = { ok: r.ok, status: r.status, id: model };
+        } catch (e) {
+          out.apiKey = { ok: false, status: 0, message: String(e?.message || e) };
+          out.model = { ok: false, status: 0, id: model };
+        }
+        try { await env.DB.prepare('SELECT 1').first(); await env.IMAGES.get('__check__'); out.storage = { ok: true }; }
+        catch (e) { out.storage = { ok: false, message: String(e?.message || e) }; }
+        return json(out);
+      }
+
       // ---- 관리비 기록 ----
       if (path === '/api/bills' && req.method === 'GET') {
         const { results } = await env.DB.prepare('SELECT data FROM bills ORDER BY id').all();
