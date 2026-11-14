@@ -260,21 +260,43 @@ function createLocalRepo() {
     putImages: (id, images) => tx('images', 'readwrite', s => s.put({ billId: id, images })),
     async getSettings() { return { model: MODELS[0].id, apiKey: '', proxyUrl: '', household: { ...DEFAULT_HOUSEHOLD }, ...(await tx('kv', 'readonly', s => s.get('settings')) || {}) }; },
     saveSettings: v => tx('kv', 'readwrite', s => s.put(v, 'settings')),
+    kind: 'local',
     async clearAll() { await tx('bills', 'readwrite', s => s.clear()); await tx('images', 'readwrite', s => s.clear()); },
   };
 }
-/* 나중에 서버로 옮길 때 예시 (같은 인터페이스):
-function createApiRepo(base) {
-  const j = (p, o) => fetch(base + p, { headers:{'Content-Type':'application/json'}, ...o }).then(r => r.json());
-  return {
-    listBills: () => j('/bills'), getBill: id => j('/bills/' + id),
-    putBill: b => j('/bills/' + b.id, { method:'PUT', body: JSON.stringify(b) }),
-    deleteBill: id => j('/bills/' + id, { method:'DELETE' }),
-    getImages: id => j('/bills/' + id + '/images'), putImages: (id, imgs) => j('/bills/' + id + '/images', { method:'PUT', body: JSON.stringify(imgs) }),
-    getSettings: () => j('/settings'), saveSettings: v => j('/settings', { method:'PUT', body: JSON.stringify(v) }),
+/* 서버 저장소 (Cloudflare Worker + D1 + KV, proxy/worker.js)
+ * 프록시 주소 + 접속 암호가 설정되어 있고 웹 주소(https)로 열었을 때 사용한다.
+ * 같은 메서드를 가지므로 화면 코드는 어느 저장소인지 몰라도 된다. */
+function createApiRepo(base, pass) {
+  const root = base.replace(/\/$/, '');
+  const call = async (p, opt = {}) => {
+    let r;
+    try { r = await fetch(root + p, { method: opt.method || 'GET', body: opt.body, headers: { 'x-api-key': pass, ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } }); }
+    catch { throw new Error('서버에 연결하지 못했어요. 인터넷 연결과 프록시 주소를 확인해 주세요.'); }
+    if (r.status === 401) throw new Error('서버 접속 암호가 맞지 않아요. 설정의 API 키 칸(접속 암호)을 확인해 주세요.');
+    if (r.status === 403) throw new Error('이 주소에서는 서버를 쓸 수 없어요. https://sunguphong.github.io/apt-bill/ 에서 열어 주세요.');
+    if (r.status === 404 && opt.allow404) return null;
+    if (!r.ok) throw new Error(`서버 오류 (${r.status})`);
+    return r.json();
   };
-}*/
-const repo = createLocalRepo();
+  const put = (p, body) => call(p, { method: 'PUT', body: JSON.stringify(body) });
+  const enc = encodeURIComponent;
+  return {
+    kind: 'server',
+    async listBills() { return (await call('/api/bills')).sort((a, b) => a.yearMonth.localeCompare(b.yearMonth)); },
+    getBill: id => call('/api/bills/' + enc(id), { allow404: true }),
+    putBill: b => put('/api/bills/' + enc(b.id), b),
+    deleteBill: id => call('/api/bills/' + enc(id), { method: 'DELETE' }),
+    getImages: id => call('/api/images/' + enc(id)),
+    putImages: (id, images) => put('/api/images/' + enc(id), images),
+    clearAll: () => call('/api/bills', { method: 'DELETE' }),
+  };
+}
+// 설정(API 키·프록시 주소 등)은 항상 이 기기에 저장하고, 관리비 기록만 서버/로컬 중 하나를 쓴다.
+const localRepo = createLocalRepo();
+let repo = localRepo;
+const canUseServer = s => !!(s.proxyUrl && s.apiKey && location.protocol.startsWith('http'));
+function pickRepo() { repo = canUseServer(state.settings) ? createApiRepo(state.settings.proxyUrl, state.settings.apiKey) : localRepo; }
 
 const state = { bills: [], settings: null, dashYm: null, trendItem: null, statYear: null, draft: null, pendingImages: [] };
 async function reload() { state.bills = await repo.listBills(); }
@@ -967,7 +989,7 @@ async function renderRecords() {
     }).join('')}</div></div>`;
   $('#csvLong').onclick = () => exportCsv('long');
   for (const b of list) if (b.imageCount) {
-    const imgs = await repo.getImages(b.id);
+    const imgs = await repo.getImages(b.id).catch(() => []);
     const el = document.querySelector(`[data-ph="${b.id}"]`);
     if (el && imgs[0]) el.innerHTML = `<img src="${imgs[0]}" alt="">`;
   }
@@ -1037,12 +1059,31 @@ function renderSettings() {
       <button class="btn ghost" id="sampleOut">샘플 데이터 지우기</button>
       <button class="btn danger" id="wipe">전체 삭제</button>
     </div>
-    <p class="muted small">데이터는 이 브라우저(IndexedDB)에 저장돼요. 브라우저 데이터를 지우면 사라지니 가끔 백업(JSON)을 받아두세요.</p>
+    ${repo.kind === 'server'
+      ? `<div class="notice ok">☁️ 관리비 기록을 <b>서버(Cloudflare)</b>에 저장하고 있어요. 휴대폰·PC 어디서 열어도 같은 기록이 보여요.</div>
+         <button class="btn ghost" id="uploadLocal">📤 이 기기에만 있던 기록을 서버로 올리기</button>`
+      : `<div class="notice">📱 관리비 기록을 <b>이 브라우저</b>에만 저장하고 있어요. 다른 기기와 함께 보려면
+         ${location.protocol.startsWith('http') ? '위에 프록시 주소와 접속 암호를 넣고 저장하세요.' : '<a href="https://sunguphong.github.io/apt-bill/">https://sunguphong.github.io/apt-bill/</a> 에서 열고 프록시 주소와 접속 암호를 넣으세요.'}</div>`}
+    <p class="muted small">가끔 전체 백업(JSON)을 받아두면 안전해요.</p>
   </div>`;
+  $('#uploadLocal')?.addEventListener('click', async e => {
+    const local = await localRepo.listBills();
+    if (!local.length) { toast('이 기기에 따로 저장된 기록이 없어요.'); return; }
+    const clash = local.filter(b => billByYm(b.yearMonth)).length;
+    if (!confirm(`이 기기의 ${local.length}개월 기록을 서버로 올릴까요?${clash ? `\n(서버에 이미 있는 ${clash}개월은 이 기기 내용으로 덮어씁니다)` : ''}`)) return;
+    e.target.disabled = true;
+    let n = 0;
+    for (const b of local) { await repo.putBill(b); await repo.putImages(b.id, await localRepo.getImages(b.id)); e.target.textContent = `올리는 중… ${++n}/${local.length}`; }
+    await reload(); toast(`${n}개월 기록을 서버로 올렸어요.`); renderSettings();
+  });
   $('#btnSaveSet').onclick = async () => {
     state.settings = { ...s, apiKey: $('#apiKey').value.trim(), proxyUrl: $('#proxyUrl').value.trim(), model: $('#model').value,
       household: { ...h, aptName: $('#hApt').value.trim(), heating: $('#hHeat').value, pyeong: +$('#hPy').value, area: +$('#hArea').value, members: +$('#hMem').value } };
-    await repo.saveSettings(state.settings); setHeader(); toast('설정을 저장했어요.');
+    await localRepo.saveSettings(state.settings); setHeader();
+    pickRepo();
+    try { await reload(); toast(repo.kind === 'server' ? '설정을 저장했어요. 서버에 연결됐어요 ☁️' : '설정을 저장했어요.'); }
+    catch (err) { state.bills = []; toast(err.message, 6000); }
+    renderSettings();
   };
   $('#csvLong').onclick = () => exportCsv('long');
   $('#csvWide').onclick = () => exportCsv('wide');
@@ -1161,9 +1202,11 @@ async function route() {
 
 (async function init() {
   $('#itemNames').innerHTML = STANDARD_ITEMS.map(n => `<option value="${n}">`).join('');
-  state.settings = await repo.getSettings();
+  window.addEventListener('unhandledrejection', e => toast(e.reason?.message || '오류가 났어요. 다시 시도해 주세요.', 6000));
+  state.settings = await localRepo.getSettings();
   setHeader();
-  await reload();
+  pickRepo();
+  try { await reload(); } catch (e) { state.bills = []; toast(e.message, 6000); }
   window.addEventListener('hashchange', route);
   route();
 })();
