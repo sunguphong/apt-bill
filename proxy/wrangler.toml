@@ -3,4 +3,4 @@ main = "worker.js"
 compatibility_date = "2026-10-01"
 
 [vars]
-ALLOWED_ORIGIN = "https://apt-bill.pages.dev"   # 실제 앱 주소로 변경
+ALLOWED_ORIGIN = "https://sunguphong.github.io"   # 앱 주소 (GitHub Pages, 도메인만)
