@@ -602,7 +602,8 @@ async function analyzeBill(images, settings) {
   try {
     res = await client.beta.messages.stream(params).finalMessage();
   } catch (e) {
-    if (e instanceof Anthropic.AuthenticationError) throw new Error('API 키가 올바르지 않아요. 설정을 확인해 주세요.');
+    if (settings.proxyUrl && e instanceof Anthropic.PermissionDeniedError) throw new Error(`이 주소(${location.origin})에서는 프록시를 쓸 수 없어요. https://sunguphong.github.io/apt-bill/ 에서 열어 주세요.`);
+    if (e instanceof Anthropic.AuthenticationError) throw new Error(settings.proxyUrl ? '프록시 접속 암호가 맞지 않아요. 설정에서 🔌 연결 확인을 눌러 보세요.' : 'API 키가 올바르지 않아요. 설정을 확인해 주세요.');
     if (e instanceof Anthropic.RateLimitError) throw new Error('요청이 너무 많아요. 잠시 후 다시 시도해 주세요.');
     if (e instanceof Anthropic.APIConnectionError) throw new Error('네트워크 연결에 실패했어요. (프록시 주소/인터넷 확인)');
     if (e instanceof Anthropic.APIError) throw new Error(`Claude API 오류 (${e.status ?? ''}): ${e.message}`);

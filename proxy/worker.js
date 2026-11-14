@@ -20,7 +20,20 @@ export default {
     const text = (msg, status) => new Response(msg, { status, headers: cors });
 
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-    if (origin !== env.ALLOWED_ORIGIN) return text('forbidden origin', 403);
+    if (origin !== env.ALLOWED_ORIGIN) {
+      // 브라우저 주소창에 프록시 주소를 직접 연 경우: 앱 주소로 안내
+      if (!origin && req.method === 'GET') {
+        const app = (env.ALLOWED_ORIGIN || '') + '/apt-bill/';
+        return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>우리집 관리비 서버</title>
+<body style="font-family:-apple-system,'Malgun Gothic',sans-serif;padding:28px;line-height:1.7;color:#18202F">
+<h2 style="color:#0F4F4A">여기는 앱이 아니라 서버 주소예요</h2>
+<p>관리비 앱은 아래 주소로 열어 주세요.</p>
+<p><a href="${app}" style="font-size:18px;font-weight:700;color:#0F4F4A">${app}</a></p>
+<p style="color:#6B7385;font-size:14px">지금 이 주소는 앱의 <b>설정 → 프록시 주소</b> 칸에만 넣으면 돼요.</p></body>`,
+          { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+      return text(`forbidden origin: ${origin || '(없음)'} — 앱은 ${(env.ALLOWED_ORIGIN || '')}/apt-bill/ 에서 열어 주세요.`, 403);
+    }
     if (!env.APP_PASSCODE || req.headers.get('x-api-key') !== env.APP_PASSCODE) return text('unauthorized', 401);
 
     const url = new URL(req.url);
